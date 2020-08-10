@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "1040351875541",
+    "firebase_url": "https://growfar-auth.firebaseio.com",
+    "project_id": "growfar-auth",
+    "storage_bucket": "growfar-auth.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1040351875541:android:b30f443e8ab815d8466d5c",
+        "android_client_info": {
+          "package_name": "com.growfar"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1040351875541-fpvmfkm7aguidu29cor27ts61nn3031b.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC21l5c1iCNGo41DMX_a_W5TrUk8A-4g-o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1040351875541-fpvmfkm7aguidu29cor27ts61nn3031b.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
