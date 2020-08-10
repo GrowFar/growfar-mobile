@@ -1,12 +1,14 @@
 import React from 'react';
-import { SafeAreaView, Text, View } from 'react-native';
+import { View } from 'react-native';
+import RegisterScreen from './screens/auth/RegisterScreen';
+import UserRegisterScreen from './screens/auth/UserRegisterScreen';
+import ConfirmCodeScreen from './screens/auth/ConfirmCodeScreen';
+import HomeScreen from './screens/HomeScreen';
 
 const App = () => {
   return (
     <View>
-      <SafeAreaView>
-        <Text>Hello There</Text>
-      </SafeAreaView>
+      <ConfirmCodeScreen />
     </View>
   );
 };
