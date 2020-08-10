@@ -9,8 +9,9 @@ import {
   StyleSheet,
   TextInput,
 } from 'react-native';
+import { HeaderBackButton } from '@react-navigation/stack';
 
-const ConfirmCodeScreen = () => {
+const ConfirmCodeScreen = ({ navigation }) => {
   const onChangeConfirmCode = (text) => {
     if (text.length === 6) {
       console.log('Konfirmasi');
@@ -37,7 +38,7 @@ const ConfirmCodeScreen = () => {
           <TouchableHighlight
             style={styles.buttonConfirm}
             underlayColor="#FFBA49CC"
-            onPress>
+            onPress={() => navigation.navigate('Home')}>
             <Text style={styles.buttonTextConfirm}>Kirim ulang kode</Text>
           </TouchableHighlight>
         </View>
@@ -45,6 +46,10 @@ const ConfirmCodeScreen = () => {
     </TouchableWithoutFeedback>
   );
 };
+
+ConfirmCodeScreen.navigationOptions = () => ({
+  headerLeft: <HeaderBackButton />,
+});
 
 const styles = StyleSheet.create({
   confirmCodeContainer: {

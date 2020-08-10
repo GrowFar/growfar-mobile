@@ -8,7 +8,7 @@ import {
   TouchableHighlight,
 } from 'react-native';
 
-const RegisterScreen = () => {
+const RegisterScreen = ({ navigation }) => {
   const [widthRegisterButton, setWidthRegisterButton] = useState(0);
 
   useEffect(() => {
@@ -18,7 +18,7 @@ const RegisterScreen = () => {
     setWidthRegisterButton((screenWidth - paddingApp - paddingButton) / 2);
   }, []);
 
-  const onPress = () => console.log('Tes');
+  const onPress = () => console.log('Test');
 
   return (
     <SafeAreaView>
@@ -31,7 +31,7 @@ const RegisterScreen = () => {
           <TouchableHighlight
             style={styles.buttonPeternak}
             underlayColor="#2F9C95CC"
-            onPress={onPress}>
+            onPress={() => navigation.navigate('UserRegister')}>
             <View style={{ width: widthRegisterButton }}>
               <Text style={styles.buttonText}>Daftar sebagai peternak</Text>
             </View>
@@ -48,7 +48,7 @@ const RegisterScreen = () => {
         <TouchableHighlight
           style={styles.buttonMasuk}
           underlayColor="#FFBA49CC"
-          onPress>
+          onPress={onPress}>
           <Text style={styles.buttonTextMasuk}>Masuk</Text>
         </TouchableHighlight>
       </View>

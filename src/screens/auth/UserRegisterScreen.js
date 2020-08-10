@@ -9,8 +9,9 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
 } from 'react-native';
+import { HeaderBackButton } from '@react-navigation/stack';
 
-const UserRegisterScreen = () => {
+const UserRegisterScreen = ({ navigation }) => {
   const [nama, setNama] = useState('');
   const [phone, setPhone] = useState('');
 
@@ -52,7 +53,7 @@ const UserRegisterScreen = () => {
           <TouchableHighlight
             style={styles.buttonDaftar}
             underlayColor="#FFBA49CC"
-            onPress={handlePress}>
+            onPress={() => navigation.navigate('ConfirmCode')}>
             <Text style={styles.buttonTextDaftar}>Buat Akun</Text>
           </TouchableHighlight>
         </View>
@@ -60,6 +61,10 @@ const UserRegisterScreen = () => {
     </TouchableWithoutFeedback>
   );
 };
+
+UserRegisterScreen.navigationOptions = () => ({
+  headerLeft: <HeaderBackButton />,
+});
 
 const styles = StyleSheet.create({
   registerContainer: {
