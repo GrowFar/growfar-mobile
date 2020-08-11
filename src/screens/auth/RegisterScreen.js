@@ -7,21 +7,30 @@ import {
   View,
   TouchableHighlight,
 } from 'react-native';
+import RegisterBackground from '../../assets/RegisterBackground.svg';
+import PeternakBackground from '../../assets/PeternakBackground.svg';
+import PekerjaBackground from '../../assets/PekerjaBackground.svg';
 
 const RegisterScreen = ({ navigation }) => {
-  const [widthRegisterButton, setWidthRegisterButton] = useState(0);
+  const [widthScreen, setWidthScreen] = useState(0);
+  const [heightScreen, setHeightScreen] = useState(0);
 
   useEffect(() => {
     const screenWidth = Dimensions.get('window').width;
+    const screenHeight = Dimensions.get('window').height;
     const paddingApp = 22 * 2; //jumlah padding kanan kiri
     const paddingButton = 8 * 4 + 8 * 2; //jumlah padding button + margin antar button
-    setWidthRegisterButton((screenWidth - paddingApp - paddingButton) / 2);
+    setWidthScreen((screenWidth - paddingApp - paddingButton) / 2);
+    setHeightScreen(screenHeight);
   }, []);
 
   const onPress = () => console.log('Test');
 
   return (
-    <SafeAreaView>
+    <SafeAreaView style={styles.contentContainer}>
+      <View style={styles.containerBackground}>
+        <RegisterBackground height={heightScreen} />
+      </View>
       <View style={styles.registerContainer}>
         <Text style={styles.appName}>growfar</Text>
         <Text style={styles.descriptionText}>
@@ -36,7 +45,7 @@ const RegisterScreen = ({ navigation }) => {
                 userType: 'peternak',
               })
             }>
-            <View style={{ width: widthRegisterButton }}>
+            <View style={{ width: widthScreen }}>
               <Text style={styles.buttonText}>Daftar sebagai peternak</Text>
             </View>
           </TouchableHighlight>
@@ -48,7 +57,7 @@ const RegisterScreen = ({ navigation }) => {
                 userType: 'pekerja',
               })
             }>
-            <View style={{ width: widthRegisterButton }}>
+            <View style={{ width: widthScreen }}>
               <Text style={styles.buttonText}>Daftar sebagai pekerja</Text>
             </View>
           </TouchableHighlight>
@@ -65,6 +74,13 @@ const RegisterScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    position: 'relative',
+  },
+  containerBackground: {
+    position: 'absolute',
+    zIndex: -999,
+  },
   registerContainer: {
     height: '100%',
     justifyContent: 'center',

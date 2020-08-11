@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+  Dimensions,
   View,
   Text,
   SafeAreaView,
@@ -13,12 +14,14 @@ import {
 import { HeaderBackButton } from '@react-navigation/stack';
 import auth from '@react-native-firebase/auth';
 import Spinner from '../../components/Spinner';
+import ConfirmCodeBackground from '../../assets/ConfirmCodeBackground.svg';
 
 LogBox.ignoreLogs([
   'Non-serializable values were found in the navigation state',
 ]);
 
 const ConfirmCodeScreen = ({ route, navigation }) => {
+  const [heightScreen, setHeightScreen] = useState(0);
   const { confirm, nama, phone, userType } = route.params;
   const [confirmUser, setConfirmUser] = useState(confirm);
   const [code, setCode] = useState();
@@ -29,6 +32,8 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
 
   // Set user ketika state auth berubah
   useEffect(() => {
+    const screenHeight = Dimensions.get('window').height;
+    setHeightScreen(screenHeight);
     const subscriber = auth().onAuthStateChanged((userState) => {
       setUser(userState);
       setLoading(false);
@@ -103,7 +108,10 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView>
+      <SafeAreaView style={styles.contentContainer}>
+        <View style={styles.containerBackground}>
+          <ConfirmCodeBackground height={heightScreen} />
+        </View>
         <View style={styles.confirmCodeContainer}>
           <Text style={styles.sectionText}>Masukkan Kode</Text>
           <Text style={styles.descriptionText}>
@@ -149,6 +157,13 @@ ConfirmCodeScreen.navigationOptions = () => ({
 });
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    position: 'relative',
+  },
+  containerBackground: {
+    position: 'absolute',
+    zIndex: -999,
+  },
   confirmCodeContainer: {
     height: '100%',
     justifyContent: 'center',

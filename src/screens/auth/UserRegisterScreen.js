@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
+  Dimensions,
   TextInput,
   Text,
   SafeAreaView,
@@ -12,13 +13,19 @@ import {
 import { HeaderBackButton } from '@react-navigation/stack';
 import auth from '@react-native-firebase/auth';
 import Spinner from '../../components/Spinner';
+import UserRegisterBackground from '../../assets/UserRegisterBackground.svg';
 
 const UserRegisterScreen = ({ route, navigation }) => {
-  // Loading state
+  const [heightScreen, setHeightScreen] = useState(0);
   const [loading, setLoading] = useState(false);
   const [nama, setNama] = useState('');
   const [phone, setPhone] = useState('');
   const { userType } = route.params;
+
+  useEffect(() => {
+    const screenHeight = Dimensions.get('window').height;
+    setHeightScreen(screenHeight);
+  }, []);
 
   const onPressRegister = async () => {
     try {
@@ -38,7 +45,10 @@ const UserRegisterScreen = ({ route, navigation }) => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <SafeAreaView>
+      <SafeAreaView style={styles.contentContainer}>
+        <View style={styles.containerBackground}>
+          <UserRegisterBackground height={heightScreen} />
+        </View>
         <View style={styles.registerContainer}>
           <Text style={styles.sectionText}>Daftar</Text>
           <Text style={styles.descriptionText}>
@@ -86,6 +96,13 @@ UserRegisterScreen.navigationOptions = () => ({
 });
 
 const styles = StyleSheet.create({
+  contentContainer: {
+    position: 'relative',
+  },
+  containerBackground: {
+    position: 'absolute',
+    zIndex: -999,
+  },
   registerContainer: {
     height: '100%',
     justifyContent: 'center',
