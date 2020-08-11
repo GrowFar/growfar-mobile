@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,13 +8,96 @@ import {
   Keyboard,
   StyleSheet,
   TextInput,
+  LogBox,
 } from 'react-native';
 import { HeaderBackButton } from '@react-navigation/stack';
+import auth from '@react-native-firebase/auth';
+import Spinner from '../../components/Spinner';
 
-const ConfirmCodeScreen = ({ navigation }) => {
-  const onChangeConfirmCode = (text) => {
+LogBox.ignoreLogs([
+  'Non-serializable values were found in the navigation state',
+]);
+
+const ConfirmCodeScreen = ({ route, navigation }) => {
+  const { confirm, nama, phone, userType } = route.params;
+  const [confirmUser, setConfirmUser] = useState(confirm);
+  const [code, setCode] = useState();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState();
+  const [resendButtonDisabledTime, setResendButtonDisabledTime] = useState(60);
+  let resendOtpTimerInterval;
+
+  // Set user ketika state auth berubah
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged((userState) => {
+      setUser(userState);
+      setLoading(false);
+    });
+    return subscriber;
+  }, []);
+
+  // Jika user sudah diset, redirect ke home
+  useEffect(() => {
+    if (user) {
+      navigation.navigate('Home', {
+        uid: user.uid,
+        nama,
+        phone,
+        userType,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
+
+  // Update timer
+  useEffect(() => {
+    startResendOtpTimer();
+
+    return () => {
+      if (resendOtpTimerInterval) {
+        clearInterval(resendOtpTimerInterval);
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [resendButtonDisabledTime]);
+
+  const onChangeConfirmCode = async (text) => {
+    setCode(text);
     if (text.length === 6) {
-      console.log('Konfirmasi');
+      setLoading(true);
+      confirmUser.confirm(text).catch((error) => {
+        console.log(error);
+        setLoading(false);
+        setCode(null);
+        // eslint-disable-next-line no-alert
+        alert('Silahkan cek kembali kode yang telah dikirimkan!');
+      });
+    }
+  };
+
+  // Set timer
+  const startResendOtpTimer = () => {
+    if (resendOtpTimerInterval) {
+      clearInterval(resendOtpTimerInterval);
+    }
+    resendOtpTimerInterval = setInterval(() => {
+      if (resendButtonDisabledTime <= 0) {
+        clearInterval(resendOtpTimerInterval);
+      } else {
+        setResendButtonDisabledTime(resendButtonDisabledTime - 1);
+      }
+    }, 1000);
+  };
+
+  // Kirim ulang kode verifikasi
+  const onPressResendCode = async () => {
+    console.log('Kirim ulang');
+    try {
+      setLoading(true);
+      setConfirmUser(await auth().signInWithPhoneNumber(phone, true));
+      setLoading(false);
+    } catch (error) {
+      console.log('Error ' + error.message);
     }
   };
 
@@ -32,15 +115,29 @@ const ConfirmCodeScreen = ({ navigation }) => {
           <TextInput
             style={styles.inputConfirmCode}
             placeholder="Berikan kode konfirmasi"
+            keyboardType="number-pad"
             maxLength={6}
             onChangeText={onChangeConfirmCode}
+            value={code}
           />
-          <TouchableHighlight
-            style={styles.buttonConfirm}
-            underlayColor="#FFBA49CC"
-            onPress={() => navigation.navigate('Home')}>
-            <Text style={styles.buttonTextConfirm}>Kirim ulang kode</Text>
-          </TouchableHighlight>
+          {resendButtonDisabledTime > 0 ? (
+            <TouchableHighlight
+              style={styles.buttonConfirmDisable}
+              underlayColor="#FFBA49CC"
+              disabled>
+              <Text style={styles.buttonTextConfirmDisable}>
+                Kirim ulang kode dalam {resendButtonDisabledTime}
+              </Text>
+            </TouchableHighlight>
+          ) : (
+            <TouchableHighlight
+              style={styles.buttonConfirm}
+              underlayColor="#FFBA49CC"
+              onPress={onPressResendCode}>
+              <Text style={styles.buttonTextConfirm}>Kirim ulang kode</Text>
+            </TouchableHighlight>
+          )}
+          {loading ? <Spinner /> : null}
         </View>
       </SafeAreaView>
     </TouchableWithoutFeedback>

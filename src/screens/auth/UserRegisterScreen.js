@@ -10,14 +10,30 @@ import {
   Keyboard,
 } from 'react-native';
 import { HeaderBackButton } from '@react-navigation/stack';
+import auth from '@react-native-firebase/auth';
+import Spinner from '../../components/Spinner';
 
-const UserRegisterScreen = ({ navigation }) => {
+const UserRegisterScreen = ({ route, navigation }) => {
+  // Loading state
+  const [loading, setLoading] = useState(false);
   const [nama, setNama] = useState('');
   const [phone, setPhone] = useState('');
+  const { userType } = route.params;
 
-  const handlePress = () => {
-    console.log('Nama ' + nama);
-    console.log('Phone ' + phone);
+  const onPressRegister = async () => {
+    try {
+      setLoading(true);
+      const confirm = await auth().signInWithPhoneNumber(phone);
+      setLoading(false);
+      navigation.navigate('ConfirmCode', {
+        confirm,
+        nama,
+        phone,
+        userType,
+      });
+    } catch (error) {
+      console.log('Error ' + error.message);
+    }
   };
 
   return (
@@ -31,7 +47,9 @@ const UserRegisterScreen = ({ navigation }) => {
           </Text>
           <TextInput
             style={styles.inputNamaPengguna}
-            placeholder="Nama pemilik peternakan"
+            placeholder={
+              userType === 'peternak' ? 'Nama pemilik peternakan' : 'Nama anda'
+            }
             autoCorrect={false}
             autoCapitalize={'words'}
             onChangeText={(text) => setNama(text)}
@@ -53,9 +71,10 @@ const UserRegisterScreen = ({ navigation }) => {
           <TouchableHighlight
             style={styles.buttonDaftar}
             underlayColor="#FFBA49CC"
-            onPress={() => navigation.navigate('ConfirmCode')}>
+            onPress={onPressRegister}>
             <Text style={styles.buttonTextDaftar}>Buat Akun</Text>
           </TouchableHighlight>
+          {loading ? <Spinner /> : null}
         </View>
       </SafeAreaView>
     </TouchableWithoutFeedback>

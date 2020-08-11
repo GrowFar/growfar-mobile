@@ -31,7 +31,11 @@ const RegisterScreen = ({ navigation }) => {
           <TouchableHighlight
             style={styles.buttonPeternak}
             underlayColor="#2F9C95CC"
-            onPress={() => navigation.navigate('UserRegister')}>
+            onPress={() =>
+              navigation.navigate('UserRegister', {
+                userType: 'peternak',
+              })
+            }>
             <View style={{ width: widthRegisterButton }}>
               <Text style={styles.buttonText}>Daftar sebagai peternak</Text>
             </View>
@@ -39,7 +43,11 @@ const RegisterScreen = ({ navigation }) => {
           <TouchableHighlight
             style={styles.buttonPekerja}
             underlayColor="#2F9C95CC"
-            onPress={onPress}>
+            onPress={() =>
+              navigation.navigate('UserRegister', {
+                userType: 'pekerja',
+              })
+            }>
             <View style={{ width: widthRegisterButton }}>
               <Text style={styles.buttonText}>Daftar sebagai pekerja</Text>
             </View>
