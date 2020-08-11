@@ -64,7 +64,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
                 if (text[0] === '0') {
                   text = text.slice(1);
                 }
-                setPhone('+1' + text);
+                setPhone('+62' + text);
               }}
             />
           </View>
