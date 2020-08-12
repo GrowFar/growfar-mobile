@@ -12,6 +12,7 @@ import {
   LogBox,
 } from 'react-native';
 import { HeaderBackButton } from '@react-navigation/stack';
+import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import Spinner from '../../components/Spinner';
 import ConfirmCodeBackground from '../../assets/ConfirmCodeBackground.svg';
@@ -22,7 +23,7 @@ LogBox.ignoreLogs([
 
 const ConfirmCodeScreen = ({ route, navigation }) => {
   const [heightScreen, setHeightScreen] = useState(0);
-  const { confirm, nama, phone, userType } = route.params;
+  const { confirm, phone } = route.params;
   const [confirmUser, setConfirmUser] = useState(confirm);
   const [code, setCode] = useState();
   const [loading, setLoading] = useState(true);
@@ -44,12 +45,12 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
   // Jika user sudah diset, redirect ke home
   useEffect(() => {
     if (user) {
-      navigation.navigate('Home', {
-        uid: user.uid,
-        nama,
-        phone,
-        userType,
-      });
+      navigation.dispatch(
+        CommonActions.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        }),
+      );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -130,19 +131,19 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
           />
           {resendButtonDisabledTime > 0 ? (
             <TouchableHighlight
-              style={styles.buttonConfirmDisable}
+              style={styles.confirmButtonDisable}
               underlayColor="#FFBA49CC"
               disabled>
-              <Text style={styles.buttonTextConfirmDisable}>
+              <Text style={styles.confirmButtonTextDisable}>
                 Kirim ulang kode dalam {resendButtonDisabledTime}
               </Text>
             </TouchableHighlight>
           ) : (
             <TouchableHighlight
-              style={styles.buttonConfirm}
+              style={styles.confirmButton}
               underlayColor="#FFBA49CC"
               onPress={onPressResendCode}>
-              <Text style={styles.buttonTextConfirm}>Kirim ulang kode</Text>
+              <Text style={styles.confirmButtonText}>Kirim ulang kode</Text>
             </TouchableHighlight>
           )}
           {loading ? <Spinner /> : null}
@@ -193,25 +194,25 @@ const styles = StyleSheet.create({
     borderColor: '#B6B6B6',
     borderRadius: 8,
   },
-  buttonConfirm: {
+  confirmButton: {
     marginTop: 32,
     paddingVertical: 12,
     backgroundColor: '#FFBA49',
     borderRadius: 10,
   },
-  buttonTextConfirm: {
+  confirmButtonText: {
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
     color: 'white',
   },
-  buttonConfirmDisable: {
+  confirmButtonDisable: {
     marginTop: 32,
     paddingVertical: 12,
     backgroundColor: '#CFCFCF73',
     borderRadius: 10,
   },
-  buttonTextConfirmDisable: {
+  confirmButtonTextDisable: {
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',

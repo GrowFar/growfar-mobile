@@ -1,21 +1,24 @@
 import React from 'react';
 import { SafeAreaView, Text, Button } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 
-const HomeScreen = ({ route, navigation }) => {
-  const { uid, nama, phone, userType } = route.params;
-
+const HomeScreen = ({ navigation }) => {
+  console.log(auth().currentUser);
   return (
     <SafeAreaView>
-      <Text>Hello there, {nama}</Text>
-      <Text>Your ID, {uid}</Text>
-      <Text>Phone, {phone}</Text>
-      <Text>You are, {userType}</Text>
+      <Text>Your ID, {auth().currentUser.uid}</Text>
+      <Text>Phone, {auth().currentUser.phoneNumber}</Text>
       <Button
         title="Keluar"
         onPress={async () => {
           await auth().signOut();
-          navigation.navigate('Register');
+          navigation.dispatch(
+            CommonActions.reset({
+              index: 0,
+              routes: [{ name: 'Register' }],
+            }),
+          );
         }}
       />
     </SafeAreaView>

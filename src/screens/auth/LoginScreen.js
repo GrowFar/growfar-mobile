@@ -15,12 +15,10 @@ import auth from '@react-native-firebase/auth';
 import Spinner from '../../components/Spinner';
 import UserRegisterBackground from '../../assets/UserRegisterBackground.svg';
 
-const UserRegisterScreen = ({ route, navigation }) => {
+const LoginScreen = ({ navigation }) => {
   const [heightScreen, setHeightScreen] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [nama, setNama] = useState('');
   const [phone, setPhone] = useState('');
-  const { userType } = route.params;
 
   useEffect(() => {
     const screenHeight = Dimensions.get('window').height;
@@ -34,9 +32,6 @@ const UserRegisterScreen = ({ route, navigation }) => {
       setLoading(false);
       navigation.navigate('ConfirmCode', {
         confirm,
-        nama,
-        phone,
-        userType,
       });
     } catch (error) {
       console.log('Error ' + error.message);
@@ -49,21 +44,12 @@ const UserRegisterScreen = ({ route, navigation }) => {
         <View style={styles.containerBackground}>
           <UserRegisterBackground height={heightScreen} />
         </View>
-        <View style={styles.registerContainer}>
-          <Text style={styles.sectionText}>Daftar</Text>
+        <View style={styles.loginContainer}>
+          <Text style={styles.sectionText}>Masuk</Text>
           <Text style={styles.descriptionText}>
-            Hanya dengan nomor telepon, dan tunggu kode unik dari kami. Akun
-            anda siap digunakan
+            Hanya dengan nomor telepon, dan tunggu kode unik dari kami. Anda
+            sudah dapat masuk kedalam sistem
           </Text>
-          <TextInput
-            style={styles.inputNamaPengguna}
-            placeholder={
-              userType === 'peternak' ? 'Nama pemilik peternakan' : 'Nama anda'
-            }
-            autoCorrect={false}
-            autoCapitalize={'words'}
-            onChangeText={(text) => setNama(text)}
-          />
           <View style={styles.containerInputNoHP}>
             <Text style={styles.labelInputNoHP}>+62</Text>
             <TextInput
@@ -79,10 +65,10 @@ const UserRegisterScreen = ({ route, navigation }) => {
             />
           </View>
           <TouchableHighlight
-            style={styles.registerButton}
+            style={styles.loginButton}
             underlayColor="#FFBA49CC"
             onPress={onPressRegister}>
-            <Text style={styles.registerButtonText}>Buat Akun</Text>
+            <Text style={styles.loginButtonText}>Masuk</Text>
           </TouchableHighlight>
           {loading ? <Spinner /> : null}
         </View>
@@ -91,7 +77,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
   );
 };
 
-UserRegisterScreen.navigationOptions = () => ({
+LoginScreen.navigationOptions = () => ({
   headerLeft: <HeaderBackButton />,
 });
 
@@ -103,7 +89,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: -999,
   },
-  registerContainer: {
+  loginContainer: {
     height: '100%',
     justifyContent: 'center',
     paddingHorizontal: 22,
@@ -118,14 +104,6 @@ const styles = StyleSheet.create({
     color: '#2F9C95',
     marginTop: 12,
     marginRight: 4,
-  },
-  inputNamaPengguna: {
-    marginTop: 32,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderWidth: 1,
-    borderColor: '#B6B6B6',
-    borderRadius: 8,
   },
   containerInputNoHP: {
     flexDirection: 'row',
@@ -147,7 +125,7 @@ const styles = StyleSheet.create({
     borderColor: '#B6B6B6',
     borderRadius: 8,
   },
-  registerButton: {
+  loginButton: {
     marginTop: 32,
     paddingVertical: 12,
     backgroundColor: '#FFBA49',
@@ -155,7 +133,7 @@ const styles = StyleSheet.create({
     borderColor: '#D69A38',
     borderRadius: 10,
   },
-  registerButtonText: {
+  loginButtonText: {
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
@@ -163,4 +141,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default UserRegisterScreen;
+export default LoginScreen;

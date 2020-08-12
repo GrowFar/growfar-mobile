@@ -7,70 +7,90 @@ import {
   View,
   TouchableHighlight,
 } from 'react-native';
+import { CommonActions } from '@react-navigation/native';
+import auth from '@react-native-firebase/auth';
 import RegisterBackground from '../../assets/RegisterBackground.svg';
 import PeternakBackground from '../../assets/PeternakBackground.svg';
 import PekerjaBackground from '../../assets/PekerjaBackground.svg';
 
 const RegisterScreen = ({ navigation }) => {
+  const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [widthScreen, setWidthScreen] = useState(0);
   const [heightScreen, setHeightScreen] = useState(0);
 
   useEffect(() => {
+    const renderContent = async () => {
+      const result = await auth().currentUser;
+      console.log(result);
+      if (result) {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          }),
+        );
+      } else {
+        setIsLoggedIn(false);
+      }
+    };
+    renderContent();
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
     const paddingApp = 22 * 2; //jumlah padding kanan kiri
     const paddingButton = 8 * 4 + 8 * 2; //jumlah padding button + margin antar button
     setWidthScreen((screenWidth - paddingApp - paddingButton) / 2);
     setHeightScreen(screenHeight);
-  }, []);
+  }, [navigation]);
 
-  const onPress = () => console.log('Test');
-
-  return (
-    <SafeAreaView style={styles.contentContainer}>
-      <View style={styles.containerBackground}>
-        <RegisterBackground height={heightScreen} />
-      </View>
-      <View style={styles.registerContainer}>
-        <Text style={styles.appName}>growfar</Text>
-        <Text style={styles.descriptionText}>
-          Daftarkan dirimu, dan permudah pekerjaanmu dibidang peternakan
-        </Text>
-        <View style={styles.buttonContainer}>
+  if (isLoggedIn === false) {
+    return (
+      <SafeAreaView style={styles.contentContainer}>
+        <View style={styles.containerBackground}>
+          <RegisterBackground height={heightScreen} />
+        </View>
+        <View style={styles.registerContainer}>
+          <Text style={styles.appName}>growfar</Text>
+          <Text style={styles.descriptionText}>
+            Daftarkan dirimu, dan permudah pekerjaanmu dibidang peternakan
+          </Text>
+          <View style={styles.buttonContainer}>
+            <TouchableHighlight
+              style={styles.buttonPeternak}
+              underlayColor="#2F9C95CC"
+              onPress={() =>
+                navigation.navigate('UserRegister', {
+                  userType: 'peternak',
+                })
+              }>
+              <View style={{ width: widthScreen }}>
+                <Text style={styles.buttonText}>Daftar sebagai peternak</Text>
+              </View>
+            </TouchableHighlight>
+            <TouchableHighlight
+              style={styles.buttonPekerja}
+              underlayColor="#2F9C95CC"
+              onPress={() =>
+                navigation.navigate('UserRegister', {
+                  userType: 'pekerja',
+                })
+              }>
+              <View style={{ width: widthScreen }}>
+                <Text style={styles.buttonText}>Daftar sebagai pekerja</Text>
+              </View>
+            </TouchableHighlight>
+          </View>
           <TouchableHighlight
-            style={styles.buttonPeternak}
-            underlayColor="#2F9C95CC"
-            onPress={() =>
-              navigation.navigate('UserRegister', {
-                userType: 'peternak',
-              })
-            }>
-            <View style={{ width: widthScreen }}>
-              <Text style={styles.buttonText}>Daftar sebagai peternak</Text>
-            </View>
-          </TouchableHighlight>
-          <TouchableHighlight
-            style={styles.buttonPekerja}
-            underlayColor="#2F9C95CC"
-            onPress={() =>
-              navigation.navigate('UserRegister', {
-                userType: 'pekerja',
-              })
-            }>
-            <View style={{ width: widthScreen }}>
-              <Text style={styles.buttonText}>Daftar sebagai pekerja</Text>
-            </View>
+            style={styles.loginButton}
+            underlayColor="#FFBA49CC"
+            onPress={() => navigation.navigate('Login')}>
+            <Text style={styles.loginButtonText}>Masuk</Text>
           </TouchableHighlight>
         </View>
-        <TouchableHighlight
-          style={styles.buttonMasuk}
-          underlayColor="#FFBA49CC"
-          onPress={onPress}>
-          <Text style={styles.buttonTextMasuk}>Masuk</Text>
-        </TouchableHighlight>
-      </View>
-    </SafeAreaView>
-  );
+      </SafeAreaView>
+    );
+  } else {
+    return null;
+  }
 };
 
 const styles = StyleSheet.create({
@@ -120,7 +140,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: 'white',
   },
-  buttonMasuk: {
+  loginButton: {
     marginTop: 32,
     paddingVertical: 12,
     backgroundColor: '#FFBA49',
@@ -128,7 +148,7 @@ const styles = StyleSheet.create({
     borderColor: '#D69A38',
     borderRadius: 10,
   },
-  buttonTextMasuk: {
+  loginButtonText: {
     fontSize: 16,
     fontWeight: '500',
     textAlign: 'center',
