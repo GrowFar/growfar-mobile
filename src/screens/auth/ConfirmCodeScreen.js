@@ -10,6 +10,7 @@ import {
   StyleSheet,
   TextInput,
   LogBox,
+  Alert,
 } from 'react-native';
 import { HeaderBackButton } from '@react-navigation/stack';
 import { CommonActions } from '@react-navigation/native';
@@ -76,7 +77,10 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
         setLoading(false);
         setCode(null);
         // eslint-disable-next-line no-alert
-        alert('Silahkan cek kembali kode yang telah dikirimkan!');
+        Alert.alert(
+          'Kode Salah',
+          'Silahkan cek kembali kode yang telah dikirimkan!',
+        );
       });
     }
   };

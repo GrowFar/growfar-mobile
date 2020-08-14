@@ -9,6 +9,7 @@ import {
   TouchableHighlight,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
 } from 'react-native';
 import { HeaderBackButton } from '@react-navigation/stack';
 import auth from '@react-native-firebase/auth';
@@ -26,15 +27,22 @@ const LoginScreen = ({ navigation }) => {
   }, []);
 
   const onPressRegister = async () => {
-    try {
-      setLoading(true);
-      const confirm = await auth().signInWithPhoneNumber(phone);
-      setLoading(false);
-      navigation.navigate('ConfirmCode', {
-        confirm,
-      });
-    } catch (error) {
-      console.log('Error ' + error.message);
+    if (phone) {
+      try {
+        setLoading(true);
+        const confirm = await auth().signInWithPhoneNumber(phone);
+        setLoading(false);
+        navigation.navigate('ConfirmCode', {
+          confirm,
+        });
+      } catch (error) {
+        console.log('Error ' + error.message);
+      }
+    } else {
+      Alert.alert(
+        'Masukkan Nomor Telepon',
+        'Silahkan masukkan terlebih dahulu nomor telepon yang telah terdaftar!',
+      );
     }
   };
 
@@ -60,7 +68,7 @@ const LoginScreen = ({ navigation }) => {
                 if (text[0] === '0') {
                   text = text.slice(1);
                 }
-                setPhone('+62' + text);
+                setPhone('+1' + text);
               }}
             />
           </View>
