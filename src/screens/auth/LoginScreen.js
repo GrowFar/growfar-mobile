@@ -13,6 +13,8 @@ import {
 } from 'react-native';
 import { HeaderBackButton } from '@react-navigation/stack';
 import auth from '@react-native-firebase/auth';
+import { useLazyQuery } from '@apollo/client';
+import { FIND_USER_BY_PHONE } from '../../graphql/Queries';
 import Spinner from '../../components/Spinner';
 import UserRegisterBackground from '../../assets/UserRegisterBackground.svg';
 
@@ -21,6 +23,33 @@ const LoginScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [phone, setPhone] = useState('');
 
+  const [getUser] = useLazyQuery(FIND_USER_BY_PHONE, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    async onCompleted(data) {
+      if (data.findUserByPhone) {
+        try {
+          const confirm = await auth().signInWithPhoneNumber(phone);
+          setLoading(false);
+          navigation.navigate('ConfirmCode', {
+            type: 'login',
+            confirm,
+            phone,
+          });
+        } catch (error) {
+          setLoading(false);
+          console.log('Error ' + error.message);
+        }
+      } else {
+        setLoading(false);
+        Alert.alert(
+          'Nomor Telepon Belum Terdaftar',
+          'Nomor telepon yang anda gunakan belum terdaftar, silahkan buat akun terlebih dahulu!',
+        );
+      }
+    },
+  });
+
   useEffect(() => {
     const screenHeight = Dimensions.get('window').height;
     setHeightScreen(screenHeight);
@@ -28,16 +57,8 @@ const LoginScreen = ({ navigation }) => {
 
   const onPressRegister = async () => {
     if (phone) {
-      try {
-        setLoading(true);
-        const confirm = await auth().signInWithPhoneNumber(phone);
-        setLoading(false);
-        navigation.navigate('ConfirmCode', {
-          confirm,
-        });
-      } catch (error) {
-        console.log('Error ' + error.message);
-      }
+      getUser({ variables: { phone } });
+      setLoading(true);
     } else {
       Alert.alert(
         'Masukkan Nomor Telepon',
@@ -67,8 +88,10 @@ const LoginScreen = ({ navigation }) => {
               onChangeText={(text) => {
                 if (text[0] === '0') {
                   text = text.slice(1);
+                } else if (text.substring(0, 3) === '+62') {
+                  text = text.slice(3);
                 }
-                setPhone('+1' + text);
+                setPhone('+62' + text);
               }}
             />
           </View>

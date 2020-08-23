@@ -10,8 +10,11 @@ import {
 import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import RegisterBackground from '../../assets/RegisterBackground.svg';
-import PeternakBackground from '../../assets/PeternakBackground.svg';
-import PekerjaBackground from '../../assets/PekerjaBackground.svg';
+
+const USER_ROLE = {
+  FARMER: 'FARMER',
+  WORKER: 'WORKER',
+};
 
 const RegisterScreen = ({ navigation }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
@@ -59,7 +62,7 @@ const RegisterScreen = ({ navigation }) => {
               underlayColor="#2F9C95CC"
               onPress={() =>
                 navigation.navigate('UserRegister', {
-                  userType: 'peternak',
+                  userType: USER_ROLE.FARMER,
                 })
               }>
               <View style={{ width: widthScreen }}>
@@ -71,7 +74,7 @@ const RegisterScreen = ({ navigation }) => {
               underlayColor="#2F9C95CC"
               onPress={() =>
                 navigation.navigate('UserRegister', {
-                  userType: 'pekerja',
+                  userType: USER_ROLE.WORKER,
                 })
               }>
               <View style={{ width: widthScreen }}>

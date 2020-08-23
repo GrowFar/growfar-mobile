@@ -13,15 +13,46 @@ import {
 } from 'react-native';
 import { HeaderBackButton } from '@react-navigation/stack';
 import auth from '@react-native-firebase/auth';
+import { useLazyQuery } from '@apollo/client';
+import { FIND_USER_BY_PHONE } from '../../graphql/Queries';
 import Spinner from '../../components/Spinner';
 import UserRegisterBackground from '../../assets/UserRegisterBackground.svg';
 
 const UserRegisterScreen = ({ route, navigation }) => {
   const [heightScreen, setHeightScreen] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [nama, setNama] = useState('');
+  const [loading, setloading] = useState(false);
+  const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const { userType } = route.params;
+
+  const [getUser] = useLazyQuery(FIND_USER_BY_PHONE, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    async onCompleted(data) {
+      if (data.findUserByPhone) {
+        setloading(false);
+        Alert.alert(
+          'Nomor Telepon Sudah Terdaftar',
+          'Nomor telepon yang anda gunakan sudah terdaftar, silahkan gunakan nomor telepon yang lain!',
+        );
+      } else {
+        try {
+          const confirm = await auth().signInWithPhoneNumber(phone);
+          setloading(false);
+          navigation.navigate('ConfirmCode', {
+            type: 'register',
+            confirm,
+            name,
+            phone,
+            userType,
+          });
+        } catch (error) {
+          setloading(false);
+          console.log('Error ' + error.message);
+        }
+      }
+    },
+  });
 
   useEffect(() => {
     const screenHeight = Dimensions.get('window').height;
@@ -29,20 +60,9 @@ const UserRegisterScreen = ({ route, navigation }) => {
   }, []);
 
   const onPressRegister = async () => {
-    if (nama && phone) {
-      try {
-        setLoading(true);
-        const confirm = await auth().signInWithPhoneNumber(phone);
-        setLoading(false);
-        navigation.navigate('ConfirmCode', {
-          confirm,
-          nama,
-          phone,
-          userType,
-        });
-      } catch (error) {
-        console.log('Error ' + error.message);
-      }
+    if (name && phone) {
+      getUser({ variables: { phone } });
+      setloading(true);
     } else {
       Alert.alert(
         'Lengkapi Data Anda',
@@ -70,7 +90,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
             }
             autoCorrect={false}
             autoCapitalize={'words'}
-            onChangeText={(text) => setNama(text)}
+            onChangeText={(text) => setName(text)}
           />
           <View style={styles.containerInputNoHP}>
             <Text style={styles.labelInputNoHP}>+62</Text>
@@ -81,8 +101,10 @@ const UserRegisterScreen = ({ route, navigation }) => {
               onChangeText={(text) => {
                 if (text[0] === '0') {
                   text = text.slice(1);
+                } else if (text.substring(0, 3) === '+62') {
+                  text = text.slice(3);
                 }
-                setPhone('+1' + text);
+                setPhone('+62' + text);
               }}
             />
           </View>

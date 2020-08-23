@@ -15,6 +15,8 @@ import {
 import { HeaderBackButton } from '@react-navigation/stack';
 import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
+import { useMutation } from '@apollo/client';
+import { CREATE_NEW_USER } from '../../graphql/Mutations';
 import Spinner from '../../components/Spinner';
 import ConfirmCodeBackground from '../../assets/ConfirmCodeBackground.svg';
 
@@ -23,8 +25,8 @@ LogBox.ignoreLogs([
 ]);
 
 const ConfirmCodeScreen = ({ route, navigation }) => {
+  const { type, confirm, phone } = route.params;
   const [heightScreen, setHeightScreen] = useState(0);
-  const { confirm, phone } = route.params;
   const [confirmUser, setConfirmUser] = useState(confirm);
   const [code, setCode] = useState();
   const [loading, setLoading] = useState(true);
@@ -32,26 +34,54 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
   const [resendButtonDisabledTime, setResendButtonDisabledTime] = useState(60);
   let resendOtpTimerInterval;
 
-  // Set user ketika state auth berubah
+  // Set verified ketika state auth berubah dan tidak null
   useEffect(() => {
     const screenHeight = Dimensions.get('window').height;
     setHeightScreen(screenHeight);
     const subscriber = auth().onAuthStateChanged((userState) => {
-      setUser(userState);
+      if (userState) {
+        setUser(userState);
+      }
       setLoading(false);
     });
     return subscriber;
   }, []);
 
-  // Jika user sudah diset, redirect ke home
-  useEffect(() => {
-    if (user) {
+  // Jika user sudah diset dan tipenya login, redirect ke home
+  // Jika tipenya register daftarkan akun
+  const [addNewUser] = useMutation(CREATE_NEW_USER, {
+    onCompleted(data) {
+      console.log(data);
       navigation.dispatch(
         CommonActions.reset({
           index: 0,
           routes: [{ name: 'Home' }],
         }),
       );
+    },
+  });
+
+  useEffect(() => {
+    if (user) {
+      if (type === 'login') {
+        navigation.dispatch(
+          CommonActions.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          }),
+        );
+      } else {
+        setLoading(true);
+        console.log(user);
+        addNewUser({
+          variables: {
+            uid: user.uid,
+            fullname: route.params.name,
+            phone: user.phoneNumber,
+            role: route.params.userType,
+          },
+        });
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
@@ -76,7 +106,6 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
         console.log(error);
         setLoading(false);
         setCode(null);
-        // eslint-disable-next-line no-alert
         Alert.alert(
           'Kode Salah',
           'Silahkan cek kembali kode yang telah dikirimkan!',
