@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>1040351875541-tfe1j4h66828ctsb24oe1491b8s7delr.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.1040351875541-tfe1j4h66828ctsb24oe1491b8s7delr</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDeDCWujf3ephsPIGkskE2qnKzU2a4ll-o</string>
+	<key>GCM_SENDER_ID</key>
+	<string>1040351875541</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>org.reactjs.native.example.growfar</string>
+	<key>PROJECT_ID</key>
+	<string>growfar-auth</string>
+	<key>STORAGE_BUCKET</key>
+	<string>growfar-auth.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:1040351875541:ios:f7de82bcd385651e466d5c</string>
+	<key>DATABASE_URL</key>
+	<string>https://growfar-auth.firebaseio.com</string>
+</dict>
+</plist>
