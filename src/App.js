@@ -8,6 +8,7 @@ import LoginScreen from './screens/auth/LoginScreen';
 import UserRegisterScreen from './screens/auth/UserRegisterScreen';
 import ConfirmCodeScreen from './screens/auth/ConfirmCodeScreen';
 import HomeScreen from './screens/HomeScreen';
+import AddFarmScreen from './screens/farmer/AddFarmScreen';
 
 const Stack = createStackNavigator();
 
@@ -52,6 +53,12 @@ const App = () => {
             name="Home"
             options={{ headerShown: false }}
             component={HomeScreen}
+          />
+          {/* Farmer */}
+          <Stack.Screen
+            name="AddFarm"
+            options={{ headerShown: false }}
+            component={AddFarmScreen}
           />
         </Stack.Navigator>
       </ApolloProvider>

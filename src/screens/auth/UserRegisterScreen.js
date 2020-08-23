@@ -23,7 +23,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
   const [loading, setloading] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const { userType } = route.params;
+  const { role } = route.params;
 
   const [getUser] = useLazyQuery(FIND_USER_BY_PHONE, {
     errorPolicy: 'ignore',
@@ -44,7 +44,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
             confirm,
             name,
             phone,
-            userType,
+            role,
           });
         } catch (error) {
           setloading(false);
@@ -86,7 +86,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
           <TextInput
             style={styles.inputNamaPengguna}
             placeholder={
-              userType === 'peternak' ? 'Nama pemilik peternakan' : 'Nama anda'
+              role === 'peternak' ? 'Nama pemilik peternakan' : 'Nama anda'
             }
             autoCorrect={false}
             autoCapitalize={'words'}

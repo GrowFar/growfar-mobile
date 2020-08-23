@@ -24,7 +24,6 @@ const RegisterScreen = ({ navigation }) => {
   useEffect(() => {
     const renderContent = async () => {
       const result = await auth().currentUser;
-      console.log(result);
       if (result) {
         navigation.dispatch(
           CommonActions.reset({
@@ -62,7 +61,7 @@ const RegisterScreen = ({ navigation }) => {
               underlayColor="#2F9C95CC"
               onPress={() =>
                 navigation.navigate('UserRegister', {
-                  userType: USER_ROLE.FARMER,
+                  role: USER_ROLE.FARMER,
                 })
               }>
               <View style={{ width: widthScreen }}>
@@ -74,7 +73,7 @@ const RegisterScreen = ({ navigation }) => {
               underlayColor="#2F9C95CC"
               onPress={() =>
                 navigation.navigate('UserRegister', {
-                  userType: USER_ROLE.WORKER,
+                  role: USER_ROLE.WORKER,
                 })
               }>
               <View style={{ width: widthScreen }}>

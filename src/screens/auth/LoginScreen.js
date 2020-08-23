@@ -35,6 +35,7 @@ const LoginScreen = ({ navigation }) => {
             type: 'login',
             confirm,
             phone,
+            role: data.findUserByPhone.role,
           });
         } catch (error) {
           setLoading(false);

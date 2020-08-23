@@ -25,7 +25,7 @@ LogBox.ignoreLogs([
 ]);
 
 const ConfirmCodeScreen = ({ route, navigation }) => {
-  const { type, confirm, phone } = route.params;
+  const { type, confirm, phone, role } = route.params;
   const [heightScreen, setHeightScreen] = useState(0);
   const [confirmUser, setConfirmUser] = useState(confirm);
   const [code, setCode] = useState();
@@ -47,29 +47,36 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
     return subscriber;
   }, []);
 
+  // Redirect screen
+  const redirectScreen = (routeName) => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: routeName }],
+      }),
+    );
+  };
+
   // Jika user sudah diset dan tipenya login, redirect ke home
   // Jika tipenya register daftarkan akun
   const [addNewUser] = useMutation(CREATE_NEW_USER, {
     onCompleted(data) {
-      console.log(data);
-      navigation.dispatch(
-        CommonActions.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        }),
-      );
+      if (role === 'FARMER') {
+        redirectScreen('AddFarm');
+      } else if (role === 'WORKER') {
+        redirectScreen('Home');
+      }
     },
   });
 
   useEffect(() => {
     if (user) {
       if (type === 'login') {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'Home' }],
-          }),
-        );
+        if (role === 'FARMER') {
+          redirectScreen('AddFarm');
+        } else if (role === 'WORKER') {
+          redirectScreen('Home');
+        }
       } else {
         setLoading(true);
         console.log(user);
@@ -78,7 +85,7 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
             uid: user.uid,
             fullname: route.params.name,
             phone: user.phoneNumber,
-            role: route.params.userType,
+            role: role,
           },
         });
       }
