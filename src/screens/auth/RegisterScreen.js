@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
+import AsyncStorage from '@react-native-community/async-storage';
 import RegisterBackground from '../../assets/RegisterBackground.svg';
 
 const USER_ROLE = {
@@ -22,27 +23,40 @@ const RegisterScreen = ({ navigation }) => {
   const [heightScreen, setHeightScreen] = useState(0);
 
   useEffect(() => {
-    const renderContent = async () => {
-      const result = await auth().currentUser;
-      if (result) {
-        navigation.dispatch(
-          CommonActions.reset({
-            index: 0,
-            routes: [{ name: 'Home' }],
-          }),
-        );
-      } else {
-        setIsLoggedIn(false);
-      }
-    };
-    renderContent();
+    checkAuth();
     const screenWidth = Dimensions.get('window').width;
     const screenHeight = Dimensions.get('window').height;
     const paddingApp = 22 * 2; //jumlah padding kanan kiri
     const paddingButton = 8 * 4 + 8 * 2; //jumlah padding button + margin antar button
     setWidthScreen((screenWidth - paddingApp - paddingButton) / 2);
     setHeightScreen(screenHeight);
-  }, [navigation]);
+  }, []);
+
+  // Redirect screen
+  const redirectScreen = (routeName) => {
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: routeName }],
+      }),
+    );
+  };
+
+  // Cek apakah user sudah login sebelumnya
+  const checkAuth = async () => {
+    let item = await AsyncStorage.getItem('user');
+    const result = auth().currentUser;
+    if (item && result) {
+      item = JSON.parse(item);
+      if (item.role === 'FARMER') {
+        redirectScreen('HomeFarm');
+      } else if (item.role === 'WORKER') {
+        redirectScreen('Home');
+      }
+    } else {
+      setIsLoggedIn(false);
+    }
+  };
 
   if (isLoggedIn === false) {
     return (

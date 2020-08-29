@@ -25,6 +25,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
   const [phone, setPhone] = useState('');
   const { role } = route.params;
 
+  // Cek apakah nomor yang digunakan sudah terdaftar atau belum
   const [getUser] = useLazyQuery(FIND_USER_BY_PHONE, {
     errorPolicy: 'ignore',
     fetchPolicy: 'network-only',
@@ -104,7 +105,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
                 } else if (text.substring(0, 3) === '+62') {
                   text = text.slice(3);
                 }
-                setPhone('+62' + text);
+                setPhone('+1' + text);
               }}
             />
           </View>

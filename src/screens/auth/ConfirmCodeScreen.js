@@ -15,8 +15,13 @@ import {
 import { HeaderBackButton } from '@react-navigation/stack';
 import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
-import { useMutation } from '@apollo/client';
+import AsyncStorage from '@react-native-community/async-storage';
+import { useMutation, useLazyQuery } from '@apollo/client';
 import { CREATE_NEW_USER } from '../../graphql/Mutations';
+import {
+  FIND_USER_BY_PHONE,
+  FIND_FARM_BY_USER_ID,
+} from '../../graphql/Queries';
 import Spinner from '../../components/Spinner';
 import ConfirmCodeBackground from '../../assets/ConfirmCodeBackground.svg';
 
@@ -30,22 +35,25 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
   const [confirmUser, setConfirmUser] = useState(confirm);
   const [code, setCode] = useState();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState();
+  const [userFirebase, setUserFirebase] = useState();
   const [resendButtonDisabledTime, setResendButtonDisabledTime] = useState(60);
   let resendOtpTimerInterval;
 
-  // Set verified ketika state auth berubah dan tidak null
-  useEffect(() => {
-    const screenHeight = Dimensions.get('window').height;
-    setHeightScreen(screenHeight);
-    const subscriber = auth().onAuthStateChanged((userState) => {
-      if (userState) {
-        setUser(userState);
-      }
-      setLoading(false);
-    });
-    return subscriber;
-  }, []);
+  const storeData = async (value) => {
+    try {
+      await AsyncStorage.setItem('user', JSON.stringify(value));
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  const mergeUserData = async (value) => {
+    try {
+      await AsyncStorage.mergeItem('user', JSON.stringify(value));
+    } catch (e) {
+      console.log(e);
+    }
+  };
 
   // Redirect screen
   const redirectScreen = (routeName) => {
@@ -57,10 +65,77 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
     );
   };
 
+  // Set userFirebase ketika state auth berubah dan tidak null
+  useEffect(() => {
+    const screenHeight = Dimensions.get('window').height;
+    setHeightScreen(screenHeight);
+    const subscriber = auth().onAuthStateChanged((userState) => {
+      if (userState) {
+        setUserFirebase(userState);
+      }
+      setLoading(false);
+    });
+    return subscriber;
+  }, []);
+
+  // Cari user berdasarkan nomor hp
+  const [getUser] = useLazyQuery(FIND_USER_BY_PHONE, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    onCompleted(data) {
+      const result = data.findUserByPhone;
+      if (result) {
+        storeData({
+          id: result.id,
+          fullname: result.fullname,
+          phone: result.phone,
+          role: result.role,
+          uid: result.uid,
+        });
+        if (role === 'FARMER') {
+          getFarm({ variables: { userId: result.id } });
+        } else if (role === 'WORKER') {
+          redirectScreen('Home');
+        }
+      }
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
+  // Cari farm berdasarkan id user
+  const [getFarm] = useLazyQuery(FIND_FARM_BY_USER_ID, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    onCompleted(data) {
+      mergeUserData({
+        farm: {
+          id: data.findFarmByUserId.id,
+          name: data.findFarmByUserId.name,
+          address: data.findFarmByUserId.address,
+          longitude: data.findFarmByUserId.longitude,
+          latitude: data.findFarmByUserId.latitude,
+        },
+      });
+      redirectScreen('HomeFarm');
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
   // Jika user sudah diset dan tipenya login, redirect ke home
   // Jika tipenya register daftarkan akun
   const [addNewUser] = useMutation(CREATE_NEW_USER, {
     onCompleted(data) {
+      storeData({
+        id: data.createNewUser.id,
+        fullname: data.createNewUser.fullname,
+        phone: data.createNewUser.phone,
+        role: data.createNewUser.role,
+        uid: data.createNewUser.uid,
+      });
       if (role === 'FARMER') {
         redirectScreen('AddFarm');
       } else if (role === 'WORKER') {
@@ -70,28 +145,22 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
   });
 
   useEffect(() => {
-    if (user) {
+    if (userFirebase) {
       if (type === 'login') {
-        if (role === 'FARMER') {
-          redirectScreen('AddFarm');
-        } else if (role === 'WORKER') {
-          redirectScreen('Home');
-        }
+        getUser({ variables: { phone: userFirebase.phoneNumber } });
       } else {
         setLoading(true);
-        console.log(user);
         addNewUser({
           variables: {
-            uid: user.uid,
+            uid: userFirebase.uid,
             fullname: route.params.name,
-            phone: user.phoneNumber,
+            phone: userFirebase.phoneNumber,
             role: role,
           },
         });
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [userFirebase]);
 
   // Update timer
   useEffect(() => {
@@ -102,10 +171,9 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
         clearInterval(resendOtpTimerInterval);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resendButtonDisabledTime]);
 
-  const onChangeConfirmCode = async (text) => {
+  const onChangeConfirmCode = (text) => {
     setCode(text);
     if (text.length === 6) {
       setLoading(true);
@@ -137,7 +205,6 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
 
   // Kirim ulang kode verifikasi
   const onPressResendCode = async () => {
-    console.log('Kirim ulang');
     try {
       setLoading(true);
       setConfirmUser(await auth().signInWithPhoneNumber(phone, true));

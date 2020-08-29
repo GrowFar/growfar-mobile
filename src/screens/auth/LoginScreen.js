@@ -56,7 +56,7 @@ const LoginScreen = ({ navigation }) => {
     setHeightScreen(screenHeight);
   }, []);
 
-  const onPressRegister = async () => {
+  const onPressLogin = async () => {
     if (phone) {
       getUser({ variables: { phone } });
       setLoading(true);
@@ -92,14 +92,14 @@ const LoginScreen = ({ navigation }) => {
                 } else if (text.substring(0, 3) === '+62') {
                   text = text.slice(3);
                 }
-                setPhone('+62' + text);
+                setPhone('+1' + text);
               }}
             />
           </View>
           <TouchableHighlight
             style={styles.loginButton}
             underlayColor="#FFBA49CC"
-            onPress={onPressRegister}>
+            onPress={onPressLogin}>
             <Text style={styles.loginButtonText}>Masuk</Text>
           </TouchableHighlight>
           {loading ? <Spinner /> : null}
