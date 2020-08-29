@@ -7,8 +7,20 @@ const FIND_USER_BY_PHONE = gql`
       fullname
       phone
       role
+      uid
+    }
+  }
+`;
+const FIND_FARM_BY_USER_ID = gql`
+  query FindFarmByUserId($userId: ID!) {
+    findFarmByUserId(user_id: $userId) {
+      id
+      name
+      address
+      longitude
+      latitude
     }
   }
 `;
 
-export { FIND_USER_BY_PHONE };
+export { FIND_USER_BY_PHONE, FIND_FARM_BY_USER_ID };
