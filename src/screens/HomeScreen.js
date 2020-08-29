@@ -2,9 +2,9 @@ import React from 'react';
 import { SafeAreaView, Text, Button } from 'react-native';
 import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
+import AsyncStorage from '@react-native-community/async-storage';
 
 const HomeScreen = ({ navigation }) => {
-  console.log(auth().currentUser);
   return (
     <SafeAreaView>
       <Text>Your ID, {auth().currentUser.uid}</Text>
@@ -13,6 +13,7 @@ const HomeScreen = ({ navigation }) => {
         title="Keluar"
         onPress={async () => {
           await auth().signOut();
+          await AsyncStorage.removeItem('user');
           navigation.dispatch(
             CommonActions.reset({
               index: 0,

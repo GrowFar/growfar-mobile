@@ -23,8 +23,9 @@ const UserRegisterScreen = ({ route, navigation }) => {
   const [loading, setloading] = useState(false);
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const { userType } = route.params;
+  const { role } = route.params;
 
+  // Cek apakah nomor yang digunakan sudah terdaftar atau belum
   const [getUser] = useLazyQuery(FIND_USER_BY_PHONE, {
     errorPolicy: 'ignore',
     fetchPolicy: 'network-only',
@@ -44,7 +45,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
             confirm,
             name,
             phone,
-            userType,
+            role,
           });
         } catch (error) {
           setloading(false);
@@ -86,7 +87,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
           <TextInput
             style={styles.inputNamaPengguna}
             placeholder={
-              userType === 'peternak' ? 'Nama pemilik peternakan' : 'Nama anda'
+              role === 'peternak' ? 'Nama pemilik peternakan' : 'Nama anda'
             }
             autoCorrect={false}
             autoCapitalize={'words'}
@@ -104,7 +105,7 @@ const UserRegisterScreen = ({ route, navigation }) => {
                 } else if (text.substring(0, 3) === '+62') {
                   text = text.slice(3);
                 }
-                setPhone('+62' + text);
+                setPhone('+1' + text);
               }}
             />
           </View>
