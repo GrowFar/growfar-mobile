@@ -20,6 +20,7 @@
     "@react-navigation/stack": "~5.9.0",
     "babel-eslint": "~10.1.0",
     "graphql": "~15.3.0",
+    "json-groupby": "~1.1.0",
     "react": "16.13.1",
     "react-native": "0.63.2",
     "react-native-gesture-handler": "~1.7.0",
