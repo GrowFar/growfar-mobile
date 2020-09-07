@@ -85,13 +85,7 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
     onCompleted(data) {
       const result = data.findUserByPhone;
       if (result) {
-        storeData({
-          id: result.id,
-          fullname: result.fullname,
-          phone: result.phone,
-          role: result.role,
-          uid: result.uid,
-        });
+        storeData(data.findUserByPhone);
         if (role === 'FARMER') {
           getFarm({ variables: { userId: result.id } });
         } else if (role === 'WORKER') {
@@ -109,16 +103,14 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
     errorPolicy: 'ignore',
     fetchPolicy: 'network-only',
     onCompleted(data) {
-      mergeUserData({
-        farm: {
-          id: data.findFarmByUserId.id,
-          name: data.findFarmByUserId.name,
-          address: data.findFarmByUserId.address,
-          longitude: data.findFarmByUserId.longitude,
-          latitude: data.findFarmByUserId.latitude,
-        },
-      });
-      redirectScreen('HomeFarm');
+      if (data.findFarmByUserId) {
+        mergeUserData({
+          farm: data.findFarmByUserId,
+        });
+        redirectScreen('HomeFarm');
+      } else {
+        redirectScreen('AddFarm');
+      }
     },
     onError(data) {
       console.log(data);
@@ -129,13 +121,7 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
   // Jika tipenya register daftarkan akun
   const [addNewUser] = useMutation(CREATE_NEW_USER, {
     onCompleted(data) {
-      storeData({
-        id: data.createNewUser.id,
-        fullname: data.createNewUser.fullname,
-        phone: data.createNewUser.phone,
-        role: data.createNewUser.role,
-        uid: data.createNewUser.uid,
-      });
+      storeData(data.createNewUser);
       if (role === 'FARMER') {
         redirectScreen('AddFarm');
       } else if (role === 'WORKER') {
