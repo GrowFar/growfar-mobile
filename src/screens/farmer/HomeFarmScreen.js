@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
+  ScrollView,
   Text,
   View,
   TouchableOpacity,
@@ -8,28 +9,78 @@ import {
   StyleSheet,
   Image,
 } from 'react-native';
-import { CommonActions } from '@react-navigation/native';
 import AsyncStorage from '@react-native-community/async-storage';
+import { useLazyQuery } from '@apollo/client';
+import { FIND_COMMODITY_BY_FARM_ID } from '../../graphql/Queries';
 import HomeFarmBanner from '../../assets/HomeFarmBanner.svg';
 import KomoditasButton from '../../assets/KomoditasButton.svg';
 import PekerjaButton from '../../assets/PekerjaButton.svg';
 import KomoditasIcon from '../../assets/KomoditasIcon.svg';
 import PekerjaIcon from '../../assets/PekerjaIcon.svg';
+import ClockIcon from '../../assets/ClockIcon.svg';
 
 const HomeScreen = ({ navigation }) => {
+  const [haveCommodities, setHaveCommodities] = useState(false);
   const [user, setUser] = useState();
   const [avatar, setAvatar] = useState();
 
-  const readItemFromStorage = async () => {
+  const readUserDataFromStorage = async () => {
     let item = await AsyncStorage.getItem('user');
     item = JSON.parse(item);
     setUser(item);
     setAvatar(item.uid);
   };
 
+  const mergeUserData = async (value) => {
+    try {
+      await AsyncStorage.mergeItem('user', JSON.stringify(value));
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
+  // Cari komoditas berdasarkan id peternakan
+  const [getCommodity] = useLazyQuery(FIND_COMMODITY_BY_FARM_ID, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    onCompleted(data) {
+      const result = data.findCommodityByFarmId;
+      if (result.length !== 0) {
+        mergeUserData({
+          commodity: result,
+        });
+        setUser({ ...user, commodity: result });
+        setHaveCommodities(true);
+      } else {
+        setHaveCommodities(false);
+      }
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
   useEffect(() => {
-    readItemFromStorage();
+    readUserDataFromStorage();
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      readUserDataFromStorage();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  // Ambil komoditas jika user sudah di set
+  useEffect(() => {
+    if (user) {
+      if (!user.commodity) {
+        getCommodity({ variables: { farmId: user.farm.id } });
+      } else {
+        setHaveCommodities(true);
+      }
+    }
+  }, [user]);
 
   return (
     <SafeAreaView style={styles.homeFarmContainer}>
@@ -47,57 +98,123 @@ const HomeScreen = ({ navigation }) => {
             />
           </TouchableOpacity>
         </View>
-        <View style={styles.infoHargaContainer}>
-          <View style={styles.containerBanner}>
-            <HomeFarmBanner style={styles.homeFarmBanner} />
-          </View>
-          <View style={styles.textContainer}>
-            <Text style={styles.textHeader}>Jangan Lewatkan</Text>
-            <Text style={styles.textDescription}>
-              pergerakan harga komoditas yang
-            </Text>
-            <Text style={styles.textDescription}>anda kelola</Text>
-            <Text style={styles.textComodity}>Telur</Text>
-            <Text style={styles.textComodityPrice}>Rp 18.678,-</Text>
-          </View>
-        </View>
-        <TouchableHighlight
-          style={styles.setPriceButton}
-          underlayColor="#FFBA49CC"
-          onPress={() => console.log(user)}>
-          <Text style={styles.setPriceButtonText}>Pasang Harga</Text>
-        </TouchableHighlight>
-        <Text style={styles.textSub}>Kelola Peternakanmu</Text>
-        <View style={styles.manageContainer}>
-          <TouchableHighlight
-            style={styles.manageButton}
-            onPress={() => console.log('Komoditas')}>
-            <View style={styles.manageButtonContainer}>
-              <KomoditasButton />
-              <View style={styles.manageContentContainer}>
-                <KomoditasIcon />
-                <Text style={styles.manageText}>Komoditas</Text>
-              </View>
+        <ScrollView
+          style={styles.scrollContainer}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.infoHargaContainer}>
+            <View style={styles.containerBanner}>
+              <HomeFarmBanner style={styles.homeFarmBanner} />
             </View>
-          </TouchableHighlight>
-          <TouchableHighlight
-            style={styles.manageButton}
-            onPress={() => console.log('Pekerja')}>
-            <View style={styles.manageButtonContainer}>
-              <PekerjaButton />
-              <View style={styles.manageContentContainer}>
-                <PekerjaIcon />
-                <Text style={styles.manageText}>Pekerja</Text>
-              </View>
+            <View style={styles.textContainer}>
+              <Text style={styles.textHeader}>
+                {haveCommodities
+                  ? 'Jangan Lewatkan'
+                  : 'Tentukan komoditas yang anda kelola terlebih dahulu'}
+              </Text>
+              <Text style={styles.textDescription}>
+                {haveCommodities
+                  ? 'Pergerakan harga komoditas yang anda kelola'
+                  : 'Kemudian pantau pergerakan harganya disini '}
+              </Text>
+              {haveCommodities ? (
+                <Text style={styles.textComodity}>
+                  {user.commodity[0].name}
+                </Text>
+              ) : null}
+              <Text style={styles.textComodityPrice}>
+                Rp {haveCommodities ? '0' : '0'},-
+              </Text>
             </View>
-          </TouchableHighlight>
-        </View>
-        <View>
-          <Text style={styles.textSub}>Log Aktivitas</Text>
+          </View>
+          {haveCommodities ? (
+            <TouchableHighlight
+              style={styles.setPriceButton}
+              underlayColor="#FFBA49CC"
+              onPress={() =>
+                navigation.navigate('FarmMap', {
+                  type: 'set',
+                })
+              }>
+              <Text style={styles.setPriceButtonText}>Pasang Harga</Text>
+            </TouchableHighlight>
+          ) : (
+            <TouchableHighlight
+              style={styles.setPriceButton}
+              underlayColor="#FFBA49CC"
+              onPress={() => navigation.navigate('Komoditas Tersedia')}>
+              <Text style={styles.setPriceButtonText}>Cari Komoditas</Text>
+            </TouchableHighlight>
+          )}
+          <Text style={styles.textSub}>Kelola Peternakanmu</Text>
+          <View style={styles.manageContainer}>
+            <TouchableHighlight
+              style={styles.manageButton}
+              onPress={() => {
+                haveCommodities
+                  ? navigation.navigate('Komoditas')
+                  : navigation.navigate('Komoditas Tersedia');
+              }}>
+              <View style={styles.manageButtonContainer}>
+                <KomoditasButton />
+                <View style={styles.manageContentContainer}>
+                  <KomoditasIcon />
+                  <Text style={styles.manageText}>Komoditas</Text>
+                </View>
+              </View>
+            </TouchableHighlight>
+            <TouchableHighlight
+              style={styles.manageButton}
+              onPress={() => console.log('Pekerja')}>
+              <View style={styles.manageButtonContainer}>
+                <PekerjaButton />
+                <View style={styles.manageContentContainer}>
+                  <PekerjaIcon />
+                  <Text style={styles.manageText}>Pekerja</Text>
+                </View>
+              </View>
+            </TouchableHighlight>
+          </View>
           <View style={styles.logContainer}>
-            <Text style={styles.logText}>Belum ada log aktivitas pekerja</Text>
+            <Text style={styles.textSub}>Log Aktivitas</Text>
+            <View style={styles.logPekerjaContainer}>
+              <View style={styles.profileContainerPekerja}>
+                <Image
+                  style={styles.profileImagePekerja}
+                  source={{
+                    uri: 'https://api.adorable.io/avatars/1',
+                  }}
+                />
+                <View style={styles.textDescriptionPekerja}>
+                  <Text style={styles.namaPekerja}>Devon Edwards</Text>
+                  <View style={styles.timePekerjaContainer}>
+                    <ClockIcon />
+                    <Text style={styles.timePekerja}>Selesai pada 09.30</Text>
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.logText}>Menyelesaikan memberikan makan</Text>
+            </View>
+            <View style={styles.logPekerjaContainer}>
+              <View style={styles.profileContainerPekerja}>
+                <Image
+                  style={styles.profileImagePekerja}
+                  source={{
+                    uri: 'https://api.adorable.io/avatars/2',
+                  }}
+                />
+                <View style={styles.textDescriptionPekerja}>
+                  <Text style={styles.namaPekerja}>Kyle Edwards</Text>
+                  <View style={styles.timePekerjaContainer}>
+                    <ClockIcon />
+                    <Text style={styles.timePekerja}>Selesai pada 09.30</Text>
+                  </View>
+                </View>
+              </View>
+              <Text style={styles.logText}>Menyelesaikan memberikan makan</Text>
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </SafeAreaView>
   );
@@ -109,12 +226,15 @@ const styles = StyleSheet.create({
   },
   contentContainer: {
     height: '100%',
-    paddingTop: 9,
-    paddingHorizontal: 22,
+    paddingHorizontal: 16,
+  },
+  scrollContainer: {
+    height: '100%',
   },
   profileContainer: {
     display: 'flex',
     alignItems: 'flex-end',
+    marginVertical: 9,
   },
   profileButton: {
     display: 'flex',
@@ -131,11 +251,11 @@ const styles = StyleSheet.create({
     height: 32,
     width: 32,
     borderRadius: 16,
-    backgroundColor: 'red',
+    backgroundColor: '#2F9C95',
   },
   infoHargaContainer: {
-    marginTop: 24,
     position: 'relative',
+    marginTop: 15,
   },
   containerBanner: {
     overflow: 'hidden',
@@ -153,35 +273,40 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   textHeader: {
+    width: '85%',
     color: 'white',
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 4,
+    textAlign: 'center',
   },
   textDescription: {
+    width: '55%',
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
     textAlign: 'center',
   },
   textComodity: {
     color: 'white',
     fontSize: 16,
     fontWeight: 'bold',
-    marginTop: 18,
+    marginTop: 8,
   },
   textComodityPrice: {
     overflow: 'hidden',
+    width: '75%',
     color: 'white',
     backgroundColor: 'rgba(207, 207, 207, 0.5)',
     fontSize: 36,
     fontWeight: 'bold',
+    textAlign: 'center',
     marginTop: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 10,
   },
   setPriceButton: {
-    marginTop: 24,
+    marginTop: 16,
     paddingVertical: 12,
     backgroundColor: '#FFBA49',
     borderWidth: 1.5,
@@ -190,7 +315,7 @@ const styles = StyleSheet.create({
   },
   setPriceButtonText: {
     fontSize: 15,
-    fontWeight: '500',
+    fontWeight: 'bold',
     textAlign: 'center',
     color: 'white',
   },
@@ -227,15 +352,49 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   logContainer: {
+    marginBottom: 15,
+  },
+  logPekerjaContainer: {
     backgroundColor: 'white',
-    marginTop: 16,
+    marginTop: 8,
     padding: 16,
     borderWidth: 1.5,
     borderColor: '#EDEDED',
     borderRadius: 10,
   },
+  profileContainerPekerja: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  profileImagePekerja: {
+    height: 48,
+    width: 48,
+    borderRadius: 5,
+  },
+  textDescriptionPekerja: {
+    marginLeft: 10,
+    justifyContent: 'center',
+  },
+  namaPekerja: {
+    color: '#2E4057',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  timePekerjaContainer: {
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  timePekerja: {
+    color: '#2E4057',
+    fontSize: 12,
+    textTransform: 'uppercase',
+    marginLeft: 4,
+  },
   logText: {
-    textAlign: 'center',
+    color: '#2E4057',
+    marginTop: 8,
     fontSize: 16,
   },
 });
