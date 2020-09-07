@@ -45,4 +45,22 @@ const CREATE_NEW_FARM = gql`
   }
 `;
 
-export { CREATE_NEW_USER, CREATE_NEW_FARM };
+const CREATE_NEW_MARKET = gql`
+  mutation CreateNewMarket($price: Int!, $farmId: ID!, $commodityId: ID!) {
+    createNewMarket(
+      marketInput: {
+        price: $price
+        farm_id: $farmId
+        commodity_id: $commodityId
+      }
+    ) {
+      id
+      submit_at
+      price
+      farm_id
+      commodity_id
+    }
+  }
+`;
+
+export { CREATE_NEW_USER, CREATE_NEW_FARM, CREATE_NEW_MARKET };

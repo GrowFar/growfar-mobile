@@ -10,6 +10,9 @@ import ConfirmCodeScreen from './screens/auth/ConfirmCodeScreen';
 import HomeScreen from './screens/HomeScreen';
 import AddFarmScreen from './screens/farmer/AddFarmScreen';
 import HomeFarmScreen from './screens/farmer/HomeFarmScreen';
+import CommodityListScreen from './screens/farmer/CommodityListScreen';
+import CommodityScreen from './screens/farmer/CommodityScreen';
+import FarmMapScreen from './screens/farmer/FarmMapScreen';
 
 const Stack = createStackNavigator();
 
@@ -27,6 +30,7 @@ const App = () => {
             name="Login"
             options={{
               title: null,
+              headerBackTitle: 'Kembali',
               headerShown: true,
               headerTransparent: true,
             }}
@@ -36,6 +40,7 @@ const App = () => {
             name="UserRegister"
             options={{
               title: null,
+              headerBackTitle: 'Kembali',
               headerShown: true,
               headerTransparent: true,
             }}
@@ -45,6 +50,7 @@ const App = () => {
             name="ConfirmCode"
             options={{
               title: null,
+              headerBackTitle: 'Kembali',
               headerShown: true,
               headerTransparent: true,
             }}
@@ -65,6 +71,55 @@ const App = () => {
             name="HomeFarm"
             options={{ headerShown: false }}
             component={HomeFarmScreen}
+          />
+          <Stack.Screen
+            name="Komoditas Tersedia"
+            options={{
+              headerBackTitle: 'Kembali',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#FAFAFA',
+                borderBottomWidth: 0,
+                elevation: 0,
+              },
+              headerTitleStyle: {
+                fontSize: 18,
+              },
+            }}
+            component={CommodityListScreen}
+          />
+          <Stack.Screen
+            name="Komoditas"
+            options={{
+              headerBackTitle: 'Kembali',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#FAFAFA',
+                borderBottomWidth: 0,
+                elevation: 0,
+              },
+              headerTitleStyle: {
+                fontSize: 18,
+              },
+            }}
+            component={CommodityScreen}
+          />
+          <Stack.Screen
+            name="FarmMap"
+            options={{
+              title: 'Pasang Harga',
+              headerBackTitle: 'Kembali',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#FAFAFA',
+                borderBottomWidth: 0,
+                elevation: 0,
+              },
+              headerTitleStyle: {
+                fontSize: 18,
+              },
+            }}
+            component={FarmMapScreen}
           />
         </Stack.Navigator>
       </ApolloProvider>

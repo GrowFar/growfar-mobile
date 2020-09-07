@@ -10,6 +10,8 @@ import {
 import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-community/async-storage';
+import { useLazyQuery } from '@apollo/client';
+import { FIND_FARM_BY_USER_ID } from '../../graphql/Queries';
 import RegisterBackground from '../../assets/RegisterBackground.svg';
 
 const USER_ROLE = {
@@ -49,7 +51,7 @@ const RegisterScreen = ({ navigation }) => {
     if (item && result) {
       item = JSON.parse(item);
       if (item.role === 'FARMER') {
-        redirectScreen('HomeFarm');
+        getFarmByUserId({ variables: { userId: item.id } });
       } else if (item.role === 'WORKER') {
         redirectScreen('Home');
       }
@@ -57,6 +59,22 @@ const RegisterScreen = ({ navigation }) => {
       setIsLoggedIn(false);
     }
   };
+
+  // Cari farm jika user adalah farmer
+  const [getFarmByUserId] = useLazyQuery(FIND_FARM_BY_USER_ID, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    onCompleted(data) {
+      if (data.findFarmByUserId) {
+        redirectScreen('HomeFarm');
+      } else {
+        redirectScreen('AddFarm');
+      }
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
 
   if (isLoggedIn === false) {
     return (
