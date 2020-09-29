@@ -11,7 +11,10 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { useLazyQuery } from '@apollo/client';
-import { FIND_COMMODITY_BY_FARM_ID } from '../../graphql/Queries';
+import {
+  FIND_COMMODITY_BY_FARM_ID,
+  FIND_FARM_MARKET_COMMODITY_NEARBY,
+} from '../../graphql/Queries';
 import HomeFarmBanner from '../../assets/HomeFarmBanner.svg';
 import KomoditasButton from '../../assets/KomoditasButton.svg';
 import PekerjaButton from '../../assets/PekerjaButton.svg';
@@ -21,6 +24,7 @@ import ClockIcon from '../../assets/ClockIcon.svg';
 
 const HomeScreen = ({ navigation }) => {
   const [haveCommodities, setHaveCommodities] = useState(false);
+  const [nearbyPrice, setNearbyPrice] = useState(0);
   const [user, setUser] = useState();
   const [avatar, setAvatar] = useState();
 
@@ -60,6 +64,22 @@ const HomeScreen = ({ navigation }) => {
     },
   });
 
+  const [getFarmMarketCommodityNearby] = useLazyQuery(
+    FIND_FARM_MARKET_COMMODITY_NEARBY,
+    {
+      errorPolicy: 'ignore',
+      fetchPolicy: 'network-only',
+      onCompleted(data) {
+        const result = data.findFarmMarketCommodityNearby;
+        setNearbyPrice(result.nearbyPrice);
+        setHaveCommodities(true);
+      },
+      onError(data) {
+        console.log(data);
+      },
+    },
+  );
+
   useEffect(() => {
     readUserDataFromStorage();
   }, []);
@@ -77,7 +97,15 @@ const HomeScreen = ({ navigation }) => {
       if (!user.commodity) {
         getCommodity({ variables: { farmId: user.farm.id } });
       } else {
-        setHaveCommodities(true);
+        getFarmMarketCommodityNearby({
+          variables: {
+            commodityId: user.commodity[0].id,
+            userId: user.id,
+            longitude: parseFloat(user.farm.longitude),
+            latitude: parseFloat(user.farm.latitude),
+            radius: parseFloat(3),
+          },
+        });
       }
     }
   }, [user]);
@@ -123,7 +151,7 @@ const HomeScreen = ({ navigation }) => {
                 </Text>
               ) : null}
               <Text style={styles.textComodityPrice}>
-                Rp {haveCommodities ? '0' : '0'},-
+                Rp {haveCommodities ? nearbyPrice : '0'},-
               </Text>
             </View>
           </View>

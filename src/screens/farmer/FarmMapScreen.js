@@ -59,8 +59,15 @@ const FarmMapScreen = ({ navigation, route }) => {
 
   // Simpan harga komoditas yang dimasukkan
   const [addNewMarket] = useMutation(CREATE_NEW_MARKET, {
-    onCompleted(data) {
-      console.log(data);
+    onCompleted() {
+      getFarmMarketNearby({
+        variables: {
+          commodityId: user.commodity[0].id,
+          longitude: parseFloat(user.farm.longitude),
+          latitude: parseFloat(user.farm.latitude),
+          radius: parseFloat(3),
+        },
+      });
       setLoading(false);
       setModalVisible(false);
     },
@@ -109,20 +116,38 @@ const FarmMapScreen = ({ navigation, route }) => {
   return (
     <View style={styles.farmMapContainer}>
       <MapView provider={PROVIDER_GOOGLE} style={styles.map} region={coord}>
-        {dataPeternakan.map((value) => (
+        {dataPeternakan.length !== 0
+          ? dataPeternakan.map((value) => (
+              <Marker
+                key={value.farm.id}
+                coordinate={{
+                  latitude: value.farm.latitude,
+                  longitude: value.farm.longitude,
+                }}
+                pinColor={value.farm.id === user.farm.id ? 'red' : 'linen'}
+                title={
+                  value.farm.id === user.farm.id
+                    ? 'Peternakanmu'
+                    : value.farm.name
+                }
+                description={'Rp ' + value.price.toString() + ',- /kg'}
+              />
+            ))
+          : null}
+        {dataPeternakan.some(
+          (value) => value.farm.id === user.farm.id,
+        ) ? null : user ? (
           <Marker
-            key={value.farm.id}
+            key={user.farm.id}
             coordinate={{
-              latitude: value.farm.latitude,
-              longitude: value.farm.longitude,
+              latitude: user.farm.latitude,
+              longitude: user.farm.longitude,
             }}
-            pinColor={value.farm.id === user.farm.id ? 'red' : 'linen'}
-            title={
-              value.farm.id === user.farm.id ? 'Peternakanmu' : value.farm.name
-            }
-            description={'Rp ' + value.price.toString() + ',- /kg'}
+            pinColor={'red'}
+            title={'Peternakanmu'}
+            description={'Anda belum menentukan harga!'}
           />
-        ))}
+        ) : null}
       </MapView>
       <View style={styles.contentContainer}>
         <View style={styles.pakanContainer}>
@@ -160,12 +185,21 @@ const FarmMapScreen = ({ navigation, route }) => {
             <Text style={styles.hargaDisekitar}>
               Rp {hargaSekitar.mingguLalu},- /kg
             </Text>
-            <View style={styles.persentaseContainer}>
-              <ArrowUpIcon />
-              <Text style={styles.colorGreen}>
-                {hargaSekitar.persentaseMingguIni}%
-              </Text>
-            </View>
+            {hargaSekitar.persentaseMingguLalu >= 0 ? (
+              <View style={styles.persentaseContainer}>
+                <ArrowUpIcon />
+                <Text style={styles.colorGreen}>
+                  {hargaSekitar.persentaseMingguLalu}%
+                </Text>
+              </View>
+            ) : (
+              <View style={styles.persentaseContainer}>
+                <ArrowDownIcon />
+                <Text style={styles.colorRed}>
+                  {hargaSekitar.persentaseMingguLalu}%
+                </Text>
+              </View>
+            )}
           </View>
         </View>
         <TouchableHighlight

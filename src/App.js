@@ -58,7 +58,19 @@ const App = () => {
           />
           <Stack.Screen
             name="Home"
-            options={{ headerShown: false }}
+            options={{
+              title: 'Profile',
+              headerBackTitle: 'Kembali',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#FAFAFA',
+                borderBottomWidth: 0,
+                elevation: 0,
+              },
+              headerTitleStyle: {
+                fontSize: 18,
+              },
+            }}
             component={HomeScreen}
           />
           {/* Farmer */}
