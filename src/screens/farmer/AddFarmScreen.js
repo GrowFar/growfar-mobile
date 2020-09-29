@@ -20,9 +20,11 @@ import AsyncStorage from '@react-native-community/async-storage';
 import { useMutation } from '@apollo/client';
 import { CREATE_NEW_FARM } from '../../graphql/Mutations';
 import Spinner from '../../components/Spinner';
+import GPSWhiteIcon from '../../assets/GPSWhiteIcon.svg';
 
 const AddFarmScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [namaFarm, setNamaFarm] = useState(false);
   const [alamatFarm, setAlamatFarm] = useState(false);
@@ -71,7 +73,8 @@ const AddFarmScreen = ({ navigation }) => {
     });
   };
 
-  const getCurrentPosition = () =>
+  const getCurrentPosition = () => {
+    setLoadingLocation(true);
     Geolocation.getCurrentPosition(
       (position) => {
         setCoord({
@@ -80,10 +83,12 @@ const AddFarmScreen = ({ navigation }) => {
           latitudeDelta: 0.001,
           longitudeDelta: 0.001,
         });
+        setLoadingLocation(false);
       },
       (error) => console.log(error),
       { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 },
     );
+  };
 
   useEffect(() => {
     getData();
@@ -178,7 +183,7 @@ const AddFarmScreen = ({ navigation }) => {
             style={styles.plusButton}
             underlayColor="#FFBA49CC"
             onPress={() => getCurrentPosition()}>
-            <Text style={styles.plusButtonText}>+</Text>
+            <GPSWhiteIcon />
           </TouchableOpacity>
         </View>
         <TouchableHighlight
@@ -224,7 +229,6 @@ const AddFarmScreen = ({ navigation }) => {
                   onPress={() => setModalVisible(false)}>
                   <Text style={styles.modalButtonText}>Batal</Text>
                 </TouchableHighlight>
-
                 <TouchableHighlight
                   style={styles.saveButton}
                   underlayColor="#FFBA49CC"
@@ -236,6 +240,7 @@ const AddFarmScreen = ({ navigation }) => {
           </View>
           {loading ? <Spinner /> : null}
         </Modal>
+        {loadingLocation ? <Spinner /> : null}
       </View>
     </TouchableWithoutFeedback>
   );
@@ -307,8 +312,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     right: 22,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    padding: 8,
     backgroundColor: '#FFBA49',
     borderWidth: 1.5,
     borderColor: '#D69A38',

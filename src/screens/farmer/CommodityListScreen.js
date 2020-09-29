@@ -14,7 +14,10 @@ import {
 import AsyncStorage from '@react-native-community/async-storage';
 import groupBy from 'json-groupby';
 import { useLazyQuery, useMutation } from '@apollo/client';
-import { FIND_ALL_COMMODITY } from '../../graphql/Queries';
+import {
+  FIND_COMMODITY_BY_FARM_ID,
+  FIND_ALL_COMMODITY,
+} from '../../graphql/Queries';
 import { CREATE_NEW_MARKET } from '../../graphql/Mutations';
 import Spinner from '../../components/Spinner';
 
@@ -32,7 +35,7 @@ const CommodityListScreen = ({ navigation }) => {
         <Image
           style={styles.categoryImage}
           source={{
-            uri: 'https://api.adorable.io/avatars/1',
+            uri: 'https://api.adorable.io/avatars/0',
           }}
         />
         <View style={styles.categoryTextContainer}>
@@ -50,13 +53,13 @@ const CommodityListScreen = ({ navigation }) => {
               <Image
                 style={styles.commodityImage}
                 source={{
-                  uri: 'https://api.adorable.io/avatars/4',
+                  uri: `https://api.adorable.io/avatars/${item.id}`,
                 }}
               />
               <View style={styles.categoryTextContainer}>
                 <Text style={styles.categoryTextName}>{item.name}</Text>
                 <Text style={styles.commodityTextPrice}>
-                  harga terbaru Rp. 18.500,- /kg
+                  harga terbaru Rp ***,- /kg
                 </Text>
               </View>
             </View>
@@ -97,10 +100,48 @@ const CommodityListScreen = ({ navigation }) => {
     setUser(item);
   };
 
+  const mergeUserData = async (value) => {
+    try {
+      await AsyncStorage.mergeItem('user', JSON.stringify(value));
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   useEffect(() => {
     readUserDataFromStorage();
     getAllCommodity({ variables: { page: 1 } });
   }, []);
+
+  // Cari komoditas berdasarkan id peternakan
+  const [getCommodity] = useLazyQuery(FIND_COMMODITY_BY_FARM_ID, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    onCompleted(data) {
+      const result = data.findCommodityByFarmId;
+      if (result.length !== 0) {
+        mergeUserData({
+          commodity: result,
+        });
+        setLoading(false);
+        navigation.pop();
+        navigation.navigate('Komoditas');
+      }
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
+  // Filter data kategori yang sesuai input
+  const onSearchCommodity = (text) => {
+    let dataFilter = groupedResult
+      .filter((item) =>
+        item.title.toLocaleLowerCase().includes(text.toLocaleLowerCase()),
+      )
+      .map((item) => item);
+    setDataResult(dataFilter);
+  };
 
   // Ambil semua komoditas yang ada
   const [getAllCommodity] = useLazyQuery(FIND_ALL_COMMODITY, {
@@ -124,22 +165,10 @@ const CommodityListScreen = ({ navigation }) => {
     },
   });
 
-  // Filter data kategori yang sesuai input
-  const onSearchCommodity = (text) => {
-    let dataFilter = groupedResult
-      .filter((item) =>
-        item.title.toLocaleLowerCase().includes(text.toLocaleLowerCase()),
-      )
-      .map((item) => item);
-    setDataResult(dataFilter);
-  };
-
   // Simpan komoditas yang dipilih
   const [addNewMarket] = useMutation(CREATE_NEW_MARKET, {
-    onCompleted(data) {
-      setLoading(false);
-      navigation.pop();
-      navigation.navigate('Komoditas');
+    onCompleted() {
+      getCommodity({ variables: { farmId: user.farm.id } });
     },
     onError(data) {
       console.log(data);

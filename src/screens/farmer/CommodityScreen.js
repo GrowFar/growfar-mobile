@@ -45,6 +45,13 @@ const CommodityScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      readUserDataFromStorage();
+    });
+    return unsubscribe;
+  }, [navigation]);
+
+  useEffect(() => {
     if (user) {
       getFarmMarketCommodityNearby({
         variables: {
@@ -114,9 +121,23 @@ const CommodityScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.priceContainer}>
                     <Text style={styles.priceText}>Terjadi Perubahan</Text>
-                    <Text style={styles.pricePercentage}>
-                      {commodity.percentage ? commodity.percentage : '0'}%
-                    </Text>
+                    {commodity.percentage ? (
+                      commodity.percentage >= 0 ? (
+                        <Text style={styles.pricePercentage}>
+                          {commodity.percentage}%
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            ...styles.pricePercentage,
+                            ...styles.colorRed,
+                          }}>
+                          {commodity.percentage}%
+                        </Text>
+                      )
+                    ) : (
+                      <Text style={styles.pricePercentage}>0%</Text>
+                    )}
                   </View>
                 </View>
               </View>
@@ -313,6 +334,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#FFBA49',
+  },
+  colorRed: {
+    color: '#FF4949',
   },
 });
 
