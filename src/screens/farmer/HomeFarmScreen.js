@@ -193,7 +193,7 @@ const HomeScreen = ({ navigation }) => {
             </TouchableHighlight>
             <TouchableHighlight
               style={styles.manageButton}
-              onPress={() => console.log('Pekerja')}>
+              onPress={() => navigation.navigate('ManageWorker')}>
               <View style={styles.manageButtonContainer}>
                 <PekerjaButton />
                 <View style={styles.manageContentContainer}>

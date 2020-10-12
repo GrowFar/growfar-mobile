@@ -89,7 +89,7 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
         if (role === 'FARMER') {
           getFarm({ variables: { userId: result.id } });
         } else if (role === 'WORKER') {
-          redirectScreen('Home');
+          redirectScreen('HomeWorker');
         }
       }
     },
@@ -125,7 +125,7 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
       if (role === 'FARMER') {
         redirectScreen('AddFarm');
       } else if (role === 'WORKER') {
-        redirectScreen('Home');
+        redirectScreen('HomeWorker');
       }
     },
   });

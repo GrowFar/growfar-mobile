@@ -53,7 +53,7 @@ const RegisterScreen = ({ navigation }) => {
       if (item.role === 'FARMER') {
         getFarmByUserId({ variables: { userId: item.id } });
       } else if (item.role === 'WORKER') {
-        redirectScreen('Home');
+        redirectScreen('HomeWorker');
       }
     } else {
       setIsLoggedIn(false);

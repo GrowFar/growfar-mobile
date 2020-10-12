@@ -99,6 +99,47 @@ const FIND_FARM_MARKET_NEARBY = gql`
   }
 `;
 
+const FIND_FARM_LOCATION_WORKER = gql`
+  query FindFarmLocationWorker(
+    $longitude: Float!
+    $latitude: Float!
+    $radius: Float!
+  ) {
+    findFarmLocationWorker(
+      longitude: $longitude
+      latitude: $latitude
+      radius: $radius
+    ) {
+      farm
+      longitude
+      latitude
+      owner
+      phone
+      commodity
+      vacancy
+    }
+  }
+`;
+
+const FIND_FARM_BY_WORKER_ID = gql`
+  query FindFarmByWorkerId($userId: ID!) {
+    findFarmByWorkerId(user_id: $userId) {
+      id
+      name
+      user {
+        id
+        uid
+        fullname
+        phone
+        role
+      }
+      address
+      longitude
+      latitude
+    }
+  }
+`;
+
 export {
   FIND_USER_BY_PHONE,
   FIND_FARM_BY_USER_ID,
@@ -106,4 +147,6 @@ export {
   FIND_ALL_COMMODITY,
   FIND_FARM_MARKET_COMMODITY_NEARBY,
   FIND_FARM_MARKET_NEARBY,
+  FIND_FARM_LOCATION_WORKER,
+  FIND_FARM_BY_WORKER_ID,
 };
