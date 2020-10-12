@@ -63,4 +63,28 @@ const CREATE_NEW_MARKET = gql`
   }
 `;
 
-export { CREATE_NEW_USER, CREATE_NEW_FARM, CREATE_NEW_MARKET };
+const GENERATE_FARM_INVITATION_CODE = gql`
+  mutation GenerateFarmInvitationCode($farmId: ID!) {
+    generateFarmInvitationCode(farm_id: $farmId) {
+      farm_id
+      generated_token
+      ended_at
+    }
+  }
+`;
+
+const REGISTER_NEW_WORKER = gql`
+  mutation RegisterNewWorker($userId: ID!, $invitationCode: ID!) {
+    registerNewWorker(user_id: $userId, invitation_code: $invitationCode) {
+      farm_id
+    }
+  }
+`;
+
+export {
+  CREATE_NEW_USER,
+  CREATE_NEW_FARM,
+  CREATE_NEW_MARKET,
+  GENERATE_FARM_INVITATION_CODE,
+  REGISTER_NEW_WORKER,
+};

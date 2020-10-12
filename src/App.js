@@ -13,6 +13,12 @@ import HomeFarmScreen from './screens/farmer/HomeFarmScreen';
 import CommodityListScreen from './screens/farmer/CommodityListScreen';
 import CommodityScreen from './screens/farmer/CommodityScreen';
 import FarmMapScreen from './screens/farmer/FarmMapScreen';
+import ManageWorkerScreen from './screens/farmer/ManageWorkerScreen';
+import AddWorkerScreen from './screens/farmer/AddWorkerScreen';
+import HomeWorkerScreen from './screens/worker/HomeWorkerScreen';
+import FindFarmScreen from './screens/worker/FindFarmScreen';
+import RegisterWorkerScreen from './screens/worker/RegisterWorkerScreen';
+import ScanQRCodeScreen from './screens/worker/ScanQRCodeScreen';
 
 const Stack = createStackNavigator();
 
@@ -132,6 +138,97 @@ const App = () => {
               },
             }}
             component={FarmMapScreen}
+          />
+          <Stack.Screen
+            name="ManageWorker"
+            options={{
+              title: 'Pekerja',
+              headerBackTitle: 'Kembali',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#FAFAFA',
+                borderBottomWidth: 0,
+                elevation: 0,
+              },
+              headerTitleStyle: {
+                fontSize: 18,
+              },
+            }}
+            component={ManageWorkerScreen}
+          />
+          <Stack.Screen
+            name="AddWorker"
+            options={{
+              title: 'Tambahkan Pekerja',
+              headerBackTitle: 'Kembali',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#FAFAFA',
+                borderBottomWidth: 0,
+                elevation: 0,
+              },
+              headerTitleStyle: {
+                fontSize: 18,
+              },
+            }}
+            component={AddWorkerScreen}
+          />
+          {/* Worker */}
+          <Stack.Screen
+            name="HomeWorker"
+            options={{ headerShown: false }}
+            component={HomeWorkerScreen}
+          />
+          <Stack.Screen
+            name="FindFarmByWorker"
+            options={{
+              title: 'Cari Peternakan',
+              headerBackTitle: 'Kembali',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#FAFAFA',
+                borderBottomWidth: 0,
+                elevation: 0,
+              },
+              headerTitleStyle: {
+                fontSize: 18,
+              },
+            }}
+            component={FindFarmScreen}
+          />
+          <Stack.Screen
+            name="RegisterWorker"
+            options={{
+              title: 'Daftar Sebagai Pekerja',
+              headerBackTitle: 'Kembali',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#FAFAFA',
+                borderBottomWidth: 0,
+                elevation: 0,
+              },
+              headerTitleStyle: {
+                fontSize: 18,
+              },
+            }}
+            component={RegisterWorkerScreen}
+          />
+          <Stack.Screen
+            name="ScanQRCode"
+            options={{
+              title: 'Scan Kode QR Peternak',
+              headerBackTitle: 'Kembali',
+              headerShown: true,
+              headerStyle: {
+                backgroundColor: '#FAFAFA',
+                borderBottomWidth: 0,
+                elevation: 0,
+              },
+              headerTitleStyle: {
+                fontSize: 18,
+              },
+            }}
+            component={ScanQRCodeScreen}
           />
         </Stack.Navigator>
       </ApolloProvider>
