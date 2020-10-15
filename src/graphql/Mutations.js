@@ -136,6 +136,14 @@ const CREATE_FARM_WORKER_TASK_ON_DONE = gql`
   }
 `;
 
+const CREATE_FARM_WORKER_PERMIT = gql`
+  mutation CreateFarmWorkerPermit($workerPermitInput: FarmWorkerPermitInput!) {
+    createFarmWorkerPermit(workerPermitInput: $workerPermitInput) {
+      id
+    }
+  }
+`;
+
 export {
   CREATE_NEW_USER,
   CREATE_NEW_FARM,
@@ -146,4 +154,5 @@ export {
   UPDATE_FARM_WORKER_TASK,
   DELETE_FARM_WORKER_TASK_BY_ID,
   CREATE_FARM_WORKER_TASK_ON_DONE,
+  CREATE_FARM_WORKER_PERMIT,
 };
