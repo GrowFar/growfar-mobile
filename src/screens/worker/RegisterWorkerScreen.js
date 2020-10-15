@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
+  View,
   StatusBar,
   Text,
   TextInput,
@@ -60,37 +61,41 @@ const RegisterWorkerScreen = ({ navigation }) => {
   };
 
   return (
-    <SafeAreaView style={styles.contentContainer}>
-      <StatusBar backgroundColor="#C8C8C8" />
-      <Text style={styles.sectionText}>Masukkan Kode Unik Peternakan</Text>
-      <Text style={styles.descriptionText}>
-        Minta pemilik peternakan untuk menunjukkan kode unik peternakan mereka.
-        Hal tersebut untuk mendaftar sebagai pekerja disana.
-      </Text>
-      <TextInput
-        style={styles.inputFarmCode}
-        placeholder="Berikan kode unik"
-        autoCapitalize={'characters'}
-        maxLength={4}
-        onChangeText={onChangeFarmCode}
-        value={code}
-      />
-      <Text style={styles.atauText}>atau</Text>
-      <TouchableHighlight
-        style={styles.scanButton}
-        underlayColor="#FFBA49CC"
-        onPress={() => navigation.navigate('ScanQRCode')}>
-        <Text style={styles.scanButtonText}>Scan Kode QR Peternak</Text>
-      </TouchableHighlight>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.contentContainer}>
+        <StatusBar backgroundColor="#C8C8C8" />
+        <Text style={styles.sectionText}>Masukkan Kode Unik Peternakan</Text>
+        <Text style={styles.descriptionText}>
+          Minta pemilik peternakan untuk menunjukkan kode unik peternakan
+          mereka. Hal tersebut untuk mendaftar sebagai pekerja disana.
+        </Text>
+        <TextInput
+          style={styles.inputFarmCode}
+          placeholder="Berikan kode unik"
+          autoCapitalize={'characters'}
+          maxLength={4}
+          onChangeText={onChangeFarmCode}
+          value={code}
+        />
+        <Text style={styles.atauText}>atau</Text>
+        <TouchableHighlight
+          style={styles.scanButton}
+          underlayColor="#FFBA49CC"
+          onPress={() => navigation.navigate('ScanQRCode')}>
+          <Text style={styles.scanButtonText}>Scan Kode QR Peternak</Text>
+        </TouchableHighlight>
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  contentContainer: {
+  container: {
     height: '100%',
-    paddingHorizontal: 34,
     backgroundColor: '#FAFAFA',
+  },
+  contentContainer: {
+    paddingHorizontal: 34,
   },
   sectionText: {
     marginTop: '15%',
