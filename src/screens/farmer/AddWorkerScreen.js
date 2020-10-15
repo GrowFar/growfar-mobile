@@ -9,6 +9,7 @@ import {
   Dimensions,
   Clipboard,
 } from 'react-native';
+import Snackbar from 'react-native-snackbar';
 import QRCode from 'react-native-qrcode-svg';
 import AsyncStorage from '@react-native-community/async-storage';
 import { useMutation } from '@apollo/client';
@@ -17,7 +18,7 @@ import { GENERATE_FARM_INVITATION_CODE } from '../../graphql/Mutations';
 const AddWorkerScreen = () => {
   const [widthScreen, setWidthScreen] = useState(0);
   const [user, setUser] = useState();
-  const [code, setCode] = useState('5F36');
+  const [code, setCode] = useState('0000');
 
   useEffect(() => {
     setWidthScreen(Dimensions.get('window').width - 72);
@@ -40,15 +41,38 @@ const AddWorkerScreen = () => {
     setUser(item);
   };
 
+  const mergeUserData = async (value) => {
+    try {
+      await AsyncStorage.mergeItem('user', JSON.stringify(value));
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   const [generateCode] = useMutation(GENERATE_FARM_INVITATION_CODE, {
-    onCompleted(data) {
-      console.log(data.generateFarmInvitationCode.generated_token);
-      setCode(data.generateFarmInvitationCode.generated_token);
+    async onCompleted(data) {
+      const result = data.generateFarmInvitationCode.generated_token;
+      await mergeUserData({
+        farm: {
+          invitationCode: result,
+        },
+      });
+      setCode(result);
     },
-    onError(data) {
-      console.log(data);
+    onError(error) {
+      if (error.message === 'Token already generated, please wait') {
+        setCode(user.farm.invitationCode);
+      }
     },
   });
+
+  const onCopyInvitationCode = () => {
+    Clipboard.setString(code);
+    Snackbar.show({
+      text: 'Kode berhasil disalin!',
+      duration: Snackbar.LENGTH_SHORT,
+    });
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -75,10 +99,10 @@ const AddWorkerScreen = () => {
             <Text style={styles.code}>{code.charAt(3)}</Text>
           </View>
           <TouchableHighlight
-            style={styles.addWorkerButton}
+            style={styles.copyButton}
             underlayColor="#FFBA49CC"
-            onPress={() => Clipboard.setString(code)}>
-            <Text style={styles.addWorkerButtonText}>Salin Kode Unik</Text>
+            onPress={onCopyInvitationCode}>
+            <Text style={styles.copyButtonText}>Salin Kode Unik</Text>
           </TouchableHighlight>
         </View>
       </ScrollView>
@@ -147,7 +171,7 @@ const styles = StyleSheet.create({
     shadowRadius: 2.22,
     elevation: 3,
   },
-  addWorkerButton: {
+  copyButton: {
     marginTop: 16,
     paddingVertical: 12,
     backgroundColor: '#FFBA49',
@@ -155,7 +179,7 @@ const styles = StyleSheet.create({
     borderColor: '#D69A38',
     borderRadius: 10,
   },
-  addWorkerButtonText: {
+  copyButtonText: {
     fontSize: 15,
     fontWeight: 'bold',
     textAlign: 'center',

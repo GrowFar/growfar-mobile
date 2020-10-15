@@ -10,26 +10,50 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
+import moment from 'moment';
 import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-community/async-storage';
 import { useLazyQuery } from '@apollo/client';
-import { FIND_FARM_BY_WORKER_ID } from '../../graphql/Queries';
+import {
+  FIND_FARM_BY_WORKER_ID,
+  FIND_FARM_WORKER_TASK_BY_FARM_ID,
+} from '../../graphql/Queries';
 import HomeWorkerBackground from '../../assets/HomeWorkerBackground.svg';
 import HomeFarmBanner from '../../assets/HomeFarmBanner.svg';
 import ClockIcon from '../../assets/ClockIcon.svg';
+import CardTask1 from '../../assets/CardTask1.svg';
+import CardTask2 from '../../assets/CardTask2.svg';
+import CardTask3 from '../../assets/CardTask3.svg';
 
 const HomeWorkerScreen = ({ navigation }) => {
+  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState();
-  const [isWorker, setIsWorker] = useState(null);
   const [heightScreen, setHeightScreen] = useState(0);
+  const [isWorker, setIsWorker] = useState(null);
+  const [taskList, setTaskList] = useState();
 
   useEffect(() => {
     const screenHeight = Dimensions.get('window').height;
     setHeightScreen(screenHeight);
     readUserDataFromStorage();
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (isWorker) {
+        setTaskList(null);
+        getWorkerTask({
+          variables: {
+            farmId: user.farm.id,
+          },
+        });
+      }
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   useEffect(() => {
     if (user) {
@@ -41,6 +65,37 @@ const HomeWorkerScreen = ({ navigation }) => {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (isWorker) {
+      setTaskList(null);
+      getWorkerTask({
+        variables: {
+          farmId: user.farm.id,
+        },
+      });
+    }
+  }, [isWorker]);
+
+  const renderCard = (index) => {
+    let card;
+    switch (index % 3) {
+      case 0:
+        card = <CardTask1 />;
+        break;
+      case 1:
+        card = <CardTask2 />;
+        break;
+      case 2:
+        card = <CardTask3 />;
+        break;
+    }
+    return card;
+  };
+
+  const convertTime = (time) => {
+    return moment(moment(time, 'HH:mm:ss').toDate()).format('HH:mm');
+  };
+
   const readUserDataFromStorage = async () => {
     let item = await AsyncStorage.getItem('user');
     item = JSON.parse(item);
@@ -50,6 +105,7 @@ const HomeWorkerScreen = ({ navigation }) => {
   const mergeUserData = async (value) => {
     try {
       await AsyncStorage.mergeItem('user', JSON.stringify(value));
+      await readUserDataFromStorage();
     } catch (e) {
       console.log(e);
     }
@@ -58,16 +114,30 @@ const HomeWorkerScreen = ({ navigation }) => {
   const [getFarmByWorkerId] = useLazyQuery(FIND_FARM_BY_WORKER_ID, {
     errorPolicy: 'ignore',
     fetchPolicy: 'network-only',
-    onCompleted(data) {
+    async onCompleted(data) {
       const result = data.findFarmByWorkerId;
       if (result) {
-        mergeUserData({
-          farm: result,
-        });
+        if (!user.farm) {
+          await mergeUserData({
+            farm: result,
+          });
+        }
         setIsWorker(true);
       } else {
         setIsWorker(false);
       }
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
+  const [getWorkerTask] = useLazyQuery(FIND_FARM_WORKER_TASK_BY_FARM_ID, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    onCompleted(data) {
+      const result = data.findFarmWorkerTaskByFarmId;
+      setTaskList(result);
     },
     onError(data) {
       console.log(data);
@@ -107,91 +177,71 @@ const HomeWorkerScreen = ({ navigation }) => {
                     Hari ini anda memiliki jadwal bekerja di peternakan miliki
                     Pak Ngatemo dimulai pukul 05.00 AM
                   </Text>
-                  <Text style={styles.textTask}>3 Tugas</Text>
+                  <Text style={styles.textTask}>
+                    {taskList ? taskList.length : '0'} Tugas
+                  </Text>
                 </View>
               </View>
               <TouchableHighlight
                 style={styles.izinButton}
                 underlayColor="#FFBA49CC"
-                onPress={() => navigation.navigate('')}>
+                onPress={() => console.log('Izin')}>
                 <Text style={styles.izinButtonText}>
                   Ajukan Izin Tidak Hadir
                 </Text>
               </TouchableHighlight>
               <View style={styles.scheduleContainer}>
                 <Text style={styles.textSub}>Jadwal Kerja</Text>
-                <View style={styles.schedulePekerjaContainer}>
-                  <Image
-                    style={styles.profileImagePekerja}
-                    source={{
-                      uri: 'https://api.adorable.io/avatars/1',
-                    }}
-                  />
-                  <View style={styles.textDescriptionPekerja}>
-                    <Text style={styles.namaTugas}>Catat Kehadiran</Text>
-                    <Text style={styles.deskripsiTugas}>
-                      Jam kedatangan dibebaskan, namun jangan melebihi jadwal ya
-                    </Text>
-                    <View style={styles.timePekerjaContainer}>
-                      <ClockIcon width="24" height="24" />
-                      <Text style={styles.timePekerja}>05.00 - 06.00</Text>
+                {taskList ? (
+                  taskList.length > 0 ? (
+                    taskList.map((value, index) => (
+                      <TouchableOpacity
+                        key={value.id}
+                        onPress={() =>
+                          navigation.navigate('TaskDetail', {
+                            taskId: value.id,
+                            cardType: index,
+                          })
+                        }>
+                        <View style={styles.schedulePekerjaContainer}>
+                          <View style={styles.cardContainer}>
+                            {renderCard(index)}
+                            <Text style={styles.cardText}>
+                              {value.title.substring(0, 1)}
+                            </Text>
+                          </View>
+                          <View style={styles.textDescriptionPekerja}>
+                            <View style={styles.titleContainer}>
+                              <Text style={styles.namaTugas}>
+                                {value.title}
+                              </Text>
+                            </View>
+                            <Text style={styles.deskripsiTugas}>
+                              {value.description}
+                            </Text>
+                            <View style={styles.timePekerjaContainer}>
+                              <ClockIcon width="24" height="24" />
+                              <Text style={styles.timePekerja}>
+                                {convertTime(value.started_at)} -{' '}
+                                {convertTime(value.ended_at)}
+                              </Text>
+                            </View>
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    ))
+                  ) : (
+                    <View style={styles.noTaskContainer}>
+                      <Text style={styles.noTaskText}>
+                        Kamu belum mendapatkan jadwal pekerjaan
+                      </Text>
                     </View>
+                  )
+                ) : loading ? (
+                  <View style={styles.noTaskContainer}>
+                    <ActivityIndicator size="large" color="#2F9C95" />
                   </View>
-                </View>
-                <View style={styles.schedulePekerjaContainer}>
-                  <Image
-                    style={styles.profileImagePekerja}
-                    source={{
-                      uri: 'https://api.adorable.io/avatars/1',
-                    }}
-                  />
-                  <View style={styles.textDescriptionPekerja}>
-                    <Text style={styles.namaTugas}>Catat Kehadiran</Text>
-                    <Text style={styles.deskripsiTugas}>
-                      Jam kedatangan dibebaskan, namun jangan melebihi jadwal ya
-                    </Text>
-                    <View style={styles.timePekerjaContainer}>
-                      <ClockIcon width="24" height="24" />
-                      <Text style={styles.timePekerja}>05.00 - 06.00</Text>
-                    </View>
-                  </View>
-                </View>
-                <View style={styles.schedulePekerjaContainer}>
-                  <Image
-                    style={styles.profileImagePekerja}
-                    source={{
-                      uri: 'https://api.adorable.io/avatars/1',
-                    }}
-                  />
-                  <View style={styles.textDescriptionPekerja}>
-                    <Text style={styles.namaTugas}>Catat Kehadiran</Text>
-                    <Text style={styles.deskripsiTugas}>
-                      Jam kedatangan dibebaskan, namun jangan melebihi jadwal ya
-                    </Text>
-                    <View style={styles.timePekerjaContainer}>
-                      <ClockIcon width="24" height="24" />
-                      <Text style={styles.timePekerja}>05.00 - 06.00</Text>
-                    </View>
-                  </View>
-                </View>
-                <View style={styles.schedulePekerjaContainer}>
-                  <Image
-                    style={styles.profileImagePekerja}
-                    source={{
-                      uri: 'https://api.adorable.io/avatars/1',
-                    }}
-                  />
-                  <View style={styles.textDescriptionPekerja}>
-                    <Text style={styles.namaTugas}>Catat Kehadiran</Text>
-                    <Text style={styles.deskripsiTugas}>
-                      Jam kedatangan dibebaskan, namun jangan melebihi jadwal ya
-                    </Text>
-                    <View style={styles.timePekerjaContainer}>
-                      <ClockIcon width="24" height="24" />
-                      <Text style={styles.timePekerja}>05.00 - 06.00</Text>
-                    </View>
-                  </View>
-                </View>
+                ) : null}
               </View>
             </ScrollView>
           </View>
@@ -326,7 +376,6 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'white',
   },
-  //
   workerContainer: {
     height: '100%',
     paddingHorizontal: 16,
@@ -434,10 +483,28 @@ const styles = StyleSheet.create({
     borderColor: '#EDEDED',
     borderRadius: 10,
   },
-  profileImagePekerja: {
-    height: 48,
-    width: 48,
-    borderRadius: 5,
+  noTaskContainer: {
+    backgroundColor: 'white',
+    padding: 16,
+    borderRadius: 10,
+    borderWidth: 1.5,
+    borderColor: '#EDEDED',
+  },
+  noTaskText: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  cardContainer: {
+    overflow: 'hidden',
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+  },
+  cardText: {
+    position: 'absolute',
+    color: 'white',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   textDescriptionPekerja: {
     flex: 1,

@@ -81,10 +81,69 @@ const REGISTER_NEW_WORKER = gql`
   }
 `;
 
+const CREATE_FARM_WORKER_TASK = gql`
+  mutation CreateFarmWorkerTask(
+    $farmId: ID!
+    $farmWorkerTaskInput: [FarmWorkerTaskInput!]!
+  ) {
+    createFarmWorkerTask(
+      farm_id: $farmId
+      farmWorkerTaskInput: $farmWorkerTaskInput
+    ) {
+      id
+      title
+      description
+      started_at
+      ended_at
+    }
+  }
+`;
+
+const UPDATE_FARM_WORKER_TASK = gql`
+  mutation UpdateFarmWorkerTask(
+    $workerTaskId: ID!
+    $farmWorkerTaskInput: FarmWorkerTaskUpdate!
+  ) {
+    updateFarmWorkerTask(
+      worker_task_id: $workerTaskId
+      farmWorkerTaskInput: $farmWorkerTaskInput
+    ) {
+      id
+      title
+      description
+      started_at
+      ended_at
+    }
+  }
+`;
+
+const DELETE_FARM_WORKER_TASK_BY_ID = gql`
+  mutation DeleteFarmWorkerTaskById($farmId: ID!, $taskId: ID!) {
+    deleteFarmWorkerTaskById(farm_id: $farmId, task_id: $taskId) {
+      id
+    }
+  }
+`;
+
+const CREATE_FARM_WORKER_TASK_ON_DONE = gql`
+  mutation CreateFarmWorkerTaskOnDone($userId: ID!, $workerTaskId: ID!) {
+    createFarmWorkerTaskOnDone(
+      user_id: $userId
+      worker_task_id: $workerTaskId
+    ) {
+      id
+    }
+  }
+`;
+
 export {
   CREATE_NEW_USER,
   CREATE_NEW_FARM,
   CREATE_NEW_MARKET,
   GENERATE_FARM_INVITATION_CODE,
   REGISTER_NEW_WORKER,
+  CREATE_FARM_WORKER_TASK,
+  UPDATE_FARM_WORKER_TASK,
+  DELETE_FARM_WORKER_TASK_BY_ID,
+  CREATE_FARM_WORKER_TASK_ON_DONE,
 };

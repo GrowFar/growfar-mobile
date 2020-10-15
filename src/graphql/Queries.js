@@ -140,6 +140,30 @@ const FIND_FARM_BY_WORKER_ID = gql`
   }
 `;
 
+const FIND_FARM_WORKER_TASK_BY_FARM_ID = gql`
+  query FindFarmWorkerTaskByFarmId($farmId: ID!) {
+    findFarmWorkerTaskByFarmId(farm_id: $farmId) {
+      id
+      title
+      description
+      started_at
+      ended_at
+    }
+  }
+`;
+
+const FIND_FARM_WORKER_TASK_BY_ID = gql`
+  query FindFarmWorkerTaskById($taskId: ID!) {
+    findFarmWorkerTaskById(task_id: $taskId) {
+      id
+      title
+      description
+      started_at
+      ended_at
+    }
+  }
+`;
+
 export {
   FIND_USER_BY_PHONE,
   FIND_FARM_BY_USER_ID,
@@ -149,4 +173,6 @@ export {
   FIND_FARM_MARKET_NEARBY,
   FIND_FARM_LOCATION_WORKER,
   FIND_FARM_BY_WORKER_ID,
+  FIND_FARM_WORKER_TASK_BY_FARM_ID,
+  FIND_FARM_WORKER_TASK_BY_ID,
 };
