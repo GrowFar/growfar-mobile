@@ -201,9 +201,9 @@ const styles = StyleSheet.create({
   container: {
     height: '100%',
     backgroundColor: '#FAFAFA',
-    paddingHorizontal: 16,
   },
   contentContainer: {
+    paddingHorizontal: 16,
     marginVertical: 22,
   },
   textHeader: {
