@@ -23,6 +23,7 @@ import FindFarmScreen from './screens/worker/FindFarmScreen';
 import RegisterWorkerScreen from './screens/worker/RegisterWorkerScreen';
 import ScanQRCodeScreen from './screens/worker/ScanQRCodeScreen';
 import TaskDetailScreen from './screens/worker/TaskDetailScreen';
+import AddPermitScreen from './screens/worker/AddPermitScreen';
 
 const Stack = createStackNavigator();
 
@@ -285,6 +286,23 @@ const App = () => {
                 },
               }}
               component={TaskDetailScreen}
+            />
+            <Stack.Screen
+              name="AddPermit"
+              options={{
+                title: 'Izin Tidak Hadir',
+                headerBackTitle: 'Kembali',
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#FAFAFA',
+                  borderBottomWidth: 0,
+                  elevation: 0,
+                },
+                headerTitleStyle: {
+                  fontSize: 18,
+                },
+              }}
+              component={AddPermitScreen}
             />
           </Stack.Navigator>
         </MenuProvider>

@@ -185,7 +185,7 @@ const HomeWorkerScreen = ({ navigation }) => {
               <TouchableHighlight
                 style={styles.izinButton}
                 underlayColor="#FFBA49CC"
-                onPress={() => console.log('Izin')}>
+                onPress={() => navigation.navigate('AddPermit')}>
                 <Text style={styles.izinButtonText}>
                   Ajukan Izin Tidak Hadir
                 </Text>
