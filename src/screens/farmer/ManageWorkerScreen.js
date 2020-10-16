@@ -26,6 +26,7 @@ import ClockIcon from '../../assets/ClockIcon.svg';
 import CardTask1 from '../../assets/CardTask1.svg';
 import CardTask2 from '../../assets/CardTask2.svg';
 import CardTask3 from '../../assets/CardTask3.svg';
+import Bell from '../../assets/Bell.svg';
 
 const ManageWorkerScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
@@ -34,6 +35,16 @@ const ManageWorkerScreen = ({ navigation }) => {
 
   useEffect(() => {
     readUserDataFromStorage();
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          style={styles.notifButton}
+          onPress={() => navigation.navigate('NotificationList')}>
+          <Text style={styles.notifText}>Pemberitahuan</Text>
+          <Bell />
+        </TouchableOpacity>
+      ),
+    });
   }, []);
 
   useEffect(() => {
@@ -361,6 +372,17 @@ const styles = StyleSheet.create({
   },
   menuOption: {
     padding: 8,
+  },
+  notifButton: {
+    flexDirection: 'row',
+    marginRight: 18,
+    padding: 4,
+    borderRadius: 4,
+  },
+  notifText: {
+    marginRight: 8,
+    fontWeight: 'bold',
+    color: '#2E4057',
   },
 });
 

@@ -177,6 +177,16 @@ const FIND_FARM_WORKER_TASK_PROGRESS = gql`
   }
 `;
 
+const FIND_LOG_ACTIVITY = gql`
+  query FindLogActivity($userId: ID!, $limit: Int!, $page: Int!) {
+    findLogActivity(user_id: $userId, limit: $limit, page: $page) {
+      notification_for
+      notification_type
+      information
+    }
+  }
+`;
+
 export {
   FIND_USER_BY_PHONE,
   FIND_FARM_BY_USER_ID,
@@ -189,4 +199,5 @@ export {
   FIND_FARM_WORKER_TASK_BY_FARM_ID,
   FIND_FARM_WORKER_TASK_BY_ID,
   FIND_FARM_WORKER_TASK_PROGRESS,
+  FIND_LOG_ACTIVITY,
 };
