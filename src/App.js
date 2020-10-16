@@ -18,6 +18,7 @@ import ManageWorkerScreen from './screens/farmer/ManageWorkerScreen';
 import AddWorkerScreen from './screens/farmer/AddWorkerScreen';
 import AddWorkerTaskScreen from './screens/farmer/AddWorkerTaskScreen';
 import EditWorkerTaskScreen from './screens/farmer/EditWorkerTaskScreen';
+import NotificationListScreen from './screens/farmer/NotificationListScreen';
 import OnBoardingWorkerScreen from './screens/worker/OnBoardingWorkerScreen';
 import HomeWorkerScreen from './screens/worker/HomeWorkerScreen';
 import FindFarmScreen from './screens/worker/FindFarmScreen';
@@ -213,6 +214,23 @@ const App = () => {
                 },
               }}
               component={EditWorkerTaskScreen}
+            />
+            <Stack.Screen
+              name="NotificationList"
+              options={{
+                title: 'Pemberitahuan',
+                headerBackTitle: 'Kembali',
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#FAFAFA',
+                  borderBottomWidth: 0,
+                  elevation: 0,
+                },
+                headerTitleStyle: {
+                  fontSize: 18,
+                },
+              }}
+              component={NotificationListScreen}
             />
             {/* Worker */}
             <Stack.Screen
