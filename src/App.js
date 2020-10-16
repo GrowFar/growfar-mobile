@@ -18,6 +18,7 @@ import ManageWorkerScreen from './screens/farmer/ManageWorkerScreen';
 import AddWorkerScreen from './screens/farmer/AddWorkerScreen';
 import AddWorkerTaskScreen from './screens/farmer/AddWorkerTaskScreen';
 import EditWorkerTaskScreen from './screens/farmer/EditWorkerTaskScreen';
+import OnBoardingWorkerScreen from './screens/worker/OnBoardingWorkerScreen';
 import HomeWorkerScreen from './screens/worker/HomeWorkerScreen';
 import FindFarmScreen from './screens/worker/FindFarmScreen';
 import RegisterWorkerScreen from './screens/worker/RegisterWorkerScreen';
@@ -214,6 +215,11 @@ const App = () => {
               component={EditWorkerTaskScreen}
             />
             {/* Worker */}
+            <Stack.Screen
+              name="OnBoarding"
+              options={{ headerShown: false }}
+              component={OnBoardingWorkerScreen}
+            />
             <Stack.Screen
               name="HomeWorker"
               options={{ headerShown: false }}

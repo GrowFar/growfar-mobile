@@ -21,6 +21,7 @@ import { CREATE_NEW_USER } from '../../graphql/Mutations';
 import {
   FIND_USER_BY_PHONE,
   FIND_FARM_BY_USER_ID,
+  FIND_FARM_BY_WORKER_ID,
 } from '../../graphql/Queries';
 import Spinner from '../../components/Spinner';
 import ConfirmCodeBackground from '../../assets/ConfirmCodeBackground.svg';
@@ -31,6 +32,7 @@ LogBox.ignoreLogs([
 
 const ConfirmCodeScreen = ({ route, navigation }) => {
   const { type, confirm, phone, role } = route.params;
+  const [user, setUser] = useState();
   const [heightScreen, setHeightScreen] = useState(0);
   const [confirmUser, setConfirmUser] = useState(confirm);
   const [code, setCode] = useState();
@@ -38,6 +40,12 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
   const [userFirebase, setUserFirebase] = useState();
   const [resendButtonDisabledTime, setResendButtonDisabledTime] = useState(60);
   let resendOtpTimerInterval;
+
+  const readUserDataFromStorage = async () => {
+    let item = await AsyncStorage.getItem('user');
+    item = JSON.parse(item);
+    setUser(item);
+  };
 
   const storeData = async (value) => {
     try {
@@ -65,6 +73,16 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
     );
   };
 
+  useEffect(() => {
+    if (user) {
+      getFarmByWorkerId({
+        variables: {
+          userId: user.id,
+        },
+      });
+    }
+  }, [user]);
+
   // Set userFirebase ketika state auth berubah dan tidak null
   useEffect(() => {
     const screenHeight = Dimensions.get('window').height;
@@ -72,8 +90,9 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
     const subscriber = auth().onAuthStateChanged((userState) => {
       if (userState) {
         setUserFirebase(userState);
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
     return subscriber;
   }, []);
@@ -82,15 +101,34 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
   const [getUser] = useLazyQuery(FIND_USER_BY_PHONE, {
     errorPolicy: 'ignore',
     fetchPolicy: 'network-only',
-    onCompleted(data) {
+    async onCompleted(data) {
       const result = data.findUserByPhone;
       if (result) {
         storeData(data.findUserByPhone);
         if (role === 'FARMER') {
           getFarm({ variables: { userId: result.id } });
         } else if (role === 'WORKER') {
-          redirectScreen('HomeWorker');
+          readUserDataFromStorage();
         }
+      }
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
+  const [getFarmByWorkerId] = useLazyQuery(FIND_FARM_BY_WORKER_ID, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    async onCompleted(data) {
+      const result = data.findFarmByWorkerId;
+      if (result) {
+        await mergeUserData({
+          farm: result,
+        });
+        redirectScreen('HomeWorker');
+      } else {
+        redirectScreen('OnBoarding');
       }
     },
     onError(data) {
@@ -125,7 +163,7 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
       if (role === 'FARMER') {
         redirectScreen('AddFarm');
       } else if (role === 'WORKER') {
-        redirectScreen('HomeWorker');
+        redirectScreen('OnBoarding');
       }
     },
   });
@@ -164,7 +202,6 @@ const ConfirmCodeScreen = ({ route, navigation }) => {
     if (text.length === 6) {
       setLoading(true);
       confirmUser.confirm(text).catch((error) => {
-        console.log(error);
         setLoading(false);
         setCode(null);
         Alert.alert(

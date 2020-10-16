@@ -4,6 +4,7 @@ import {
   Text,
   SafeAreaView,
   StyleSheet,
+  StatusBar,
   View,
   TouchableHighlight,
 } from 'react-native';
@@ -11,7 +12,10 @@ import { CommonActions } from '@react-navigation/native';
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-community/async-storage';
 import { useLazyQuery } from '@apollo/client';
-import { FIND_FARM_BY_USER_ID } from '../../graphql/Queries';
+import {
+  FIND_FARM_BY_USER_ID,
+  FIND_FARM_BY_WORKER_ID,
+} from '../../graphql/Queries';
 import RegisterBackground from '../../assets/RegisterBackground.svg';
 
 const USER_ROLE = {
@@ -34,6 +38,14 @@ const RegisterScreen = ({ navigation }) => {
     setHeightScreen(screenHeight);
   }, []);
 
+  const mergeUserData = async (value) => {
+    try {
+      await AsyncStorage.mergeItem('user', JSON.stringify(value));
+    } catch (e) {
+      console.log(e);
+    }
+  };
+
   // Redirect screen
   const redirectScreen = (routeName) => {
     navigation.dispatch(
@@ -53,12 +65,35 @@ const RegisterScreen = ({ navigation }) => {
       if (item.role === 'FARMER') {
         getFarmByUserId({ variables: { userId: item.id } });
       } else if (item.role === 'WORKER') {
-        redirectScreen('HomeWorker');
+        getFarmByWorkerId({
+          variables: {
+            userId: item.id,
+          },
+        });
       }
     } else {
       setIsLoggedIn(false);
     }
   };
+
+  const [getFarmByWorkerId] = useLazyQuery(FIND_FARM_BY_WORKER_ID, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    async onCompleted(data) {
+      const result = data.findFarmByWorkerId;
+      if (result) {
+        await mergeUserData({
+          farm: result,
+        });
+        redirectScreen('HomeWorker');
+      } else {
+        redirectScreen('OnBoarding');
+      }
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
 
   // Cari farm jika user adalah farmer
   const [getFarmByUserId] = useLazyQuery(FIND_FARM_BY_USER_ID, {
@@ -79,6 +114,7 @@ const RegisterScreen = ({ navigation }) => {
   if (isLoggedIn === false) {
     return (
       <SafeAreaView style={styles.contentContainer}>
+        <StatusBar backgroundColor="#C8C8C8" />
         <View style={styles.containerBackground}>
           <RegisterBackground height={heightScreen} />
         </View>
