@@ -13,68 +13,58 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import moment from 'moment';
-import { CommonActions } from '@react-navigation/native';
-import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-community/async-storage';
 import { useLazyQuery } from '@apollo/client';
 import {
   FIND_FARM_BY_WORKER_ID,
-  FIND_FARM_WORKER_TASK_BY_FARM_ID,
+  FIND_FARM_WORKER_TASK_PROGRESS,
 } from '../../graphql/Queries';
-import HomeWorkerBackground from '../../assets/HomeWorkerBackground.svg';
 import HomeFarmBanner from '../../assets/HomeFarmBanner.svg';
+import HomeWorkerBackground from '../../assets/HomeWorkerBackground.svg';
 import ClockIcon from '../../assets/ClockIcon.svg';
 import CardTask1 from '../../assets/CardTask1.svg';
 import CardTask2 from '../../assets/CardTask2.svg';
 import CardTask3 from '../../assets/CardTask3.svg';
 
 const HomeWorkerScreen = ({ navigation }) => {
-  const [loading, setLoading] = useState(true);
   const [user, setUser] = useState();
   const [heightScreen, setHeightScreen] = useState(0);
-  const [isWorker, setIsWorker] = useState(null);
+  const [isAttend, setIsAttend] = useState(null);
   const [taskList, setTaskList] = useState();
 
   useEffect(() => {
+    readUserDataFromStorage();
     const screenHeight = Dimensions.get('window').height;
     setHeightScreen(screenHeight);
-    readUserDataFromStorage();
   }, []);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      if (isWorker) {
-        setTaskList(null);
-        getWorkerTask({
-          variables: {
-            farmId: user.farm.id,
-          },
-        });
-      }
+      readUserDataFromStorage();
     });
     return unsubscribe;
   }, [navigation]);
 
   useEffect(() => {
     if (user) {
-      getFarmByWorkerId({
-        variables: {
-          userId: user.id,
-        },
-      });
+      if (user.farm) {
+        setTaskList(null);
+        getWorkerTask({
+          variables: {
+            farmId: user.farm.id,
+            userId: user.id,
+          },
+        });
+        setIsAttend(true);
+      } else {
+        getFarmByWorkerId({
+          variables: {
+            userId: user.id,
+          },
+        });
+      }
     }
   }, [user]);
-
-  useEffect(() => {
-    if (isWorker) {
-      setTaskList(null);
-      getWorkerTask({
-        variables: {
-          farmId: user.farm.id,
-        },
-      });
-    }
-  }, [isWorker]);
 
   const renderCard = (index) => {
     let card;
@@ -105,7 +95,6 @@ const HomeWorkerScreen = ({ navigation }) => {
   const mergeUserData = async (value) => {
     try {
       await AsyncStorage.mergeItem('user', JSON.stringify(value));
-      await readUserDataFromStorage();
     } catch (e) {
       console.log(e);
     }
@@ -117,14 +106,10 @@ const HomeWorkerScreen = ({ navigation }) => {
     async onCompleted(data) {
       const result = data.findFarmByWorkerId;
       if (result) {
-        if (!user.farm) {
-          await mergeUserData({
-            farm: result,
-          });
-        }
-        setIsWorker(true);
-      } else {
-        setIsWorker(false);
+        await mergeUserData({
+          farm: result,
+        });
+        await readUserDataFromStorage();
       }
     },
     onError(data) {
@@ -132,11 +117,11 @@ const HomeWorkerScreen = ({ navigation }) => {
     },
   });
 
-  const [getWorkerTask] = useLazyQuery(FIND_FARM_WORKER_TASK_BY_FARM_ID, {
+  const [getWorkerTask] = useLazyQuery(FIND_FARM_WORKER_TASK_PROGRESS, {
     errorPolicy: 'ignore',
     fetchPolicy: 'network-only',
     onCompleted(data) {
-      const result = data.findFarmWorkerTaskByFarmId;
+      const result = data.findFarmWorkerTaskProgress;
       setTaskList(result);
     },
     onError(data) {
@@ -144,10 +129,14 @@ const HomeWorkerScreen = ({ navigation }) => {
     },
   });
 
+  const onRecordAttendance = () => {
+    console.log('Record');
+  };
+
   return (
     <SafeAreaView style={styles.contentContainer}>
-      {isWorker !== null ? (
-        isWorker === true ? (
+      {isAttend !== null ? (
+        isAttend === true ? (
           <View style={styles.workerContainer}>
             <StatusBar backgroundColor="#C8C8C8" />
             <View style={styles.profileContainer}>
@@ -196,6 +185,7 @@ const HomeWorkerScreen = ({ navigation }) => {
                   taskList.length > 0 ? (
                     taskList.map((value, index) => (
                       <TouchableOpacity
+                        disabled={value.is_done ? true : false}
                         key={value.id}
                         onPress={() =>
                           navigation.navigate('TaskDetail', {
@@ -203,7 +193,18 @@ const HomeWorkerScreen = ({ navigation }) => {
                             cardType: index,
                           })
                         }>
-                        <View style={styles.schedulePekerjaContainer}>
+                        <View
+                          style={
+                            value.is_done
+                              ? {
+                                  ...styles.schedulePekerjaContainer,
+                                  ...styles.backgroundColorGrey,
+                                }
+                              : {
+                                  ...styles.schedulePekerjaContainer,
+                                  ...styles.backgroundColorWhite,
+                                }
+                          }>
                           <View style={styles.cardContainer}>
                             {renderCard(index)}
                             <Text style={styles.cardText}>
@@ -237,11 +238,11 @@ const HomeWorkerScreen = ({ navigation }) => {
                       </Text>
                     </View>
                   )
-                ) : loading ? (
+                ) : (
                   <View style={styles.noTaskContainer}>
                     <ActivityIndicator size="large" color="#2F9C95" />
                   </View>
-                ) : null}
+                )}
               </View>
             </ScrollView>
           </View>
@@ -251,49 +252,20 @@ const HomeWorkerScreen = ({ navigation }) => {
             <View style={styles.containerBackground}>
               <HomeWorkerBackground height={heightScreen} />
             </View>
-            <View style={styles.notWorkerContainer}>
+            <View style={styles.attendanceContainer}>
               <Text style={styles.sectionText}>
-                Terimakasih anda sudah terdaftar
+                Lakukan Absensi Terlebih Dahulu
               </Text>
               <Text style={styles.descriptionText}>
-                Untuk menggunakan aplikasi secara penuh, hubungi pemilik
-                peternakan anda. Atau mulai mencari peternakan yang tersedia
+                Jangan lupa nyalakan GPS atau layanan lokasi. Sehingga anda
+                dapat melakukan pencatatan kehadiran maupun tracking pekerjaan.
               </Text>
               <TouchableHighlight
-                style={styles.findFarmButton}
+                style={styles.attendanceButton}
                 underlayColor="#FFBA49CC"
-                onPress={() => navigation.navigate('FindFarmByWorker')}>
-                <Text style={styles.findFarmButtonText}>Cari Peternakan</Text>
+                onPress={() => onRecordAttendance()}>
+                <Text style={styles.attendanceButtonText}>Catat Kehadiran</Text>
               </TouchableHighlight>
-              <TouchableHighlight
-                style={styles.registerWorkerButton}
-                activeOpacity={0.8}
-                underlayColor="#94CFCFCF"
-                onPress={() => navigation.navigate('RegisterWorker')}>
-                <Text style={styles.registerWorkerButtonText}>
-                  Daftar Sebagai Pekerja
-                </Text>
-              </TouchableHighlight>
-              <View style={styles.cek}>
-                <TouchableHighlight
-                  style={styles.logoutButton}
-                  activeOpacity={0.8}
-                  underlayColor="#94CFCFCF"
-                  onPress={async () => {
-                    await auth().signOut();
-                    await AsyncStorage.removeItem('user');
-                    navigation.dispatch(
-                      CommonActions.reset({
-                        index: 0,
-                        routes: [{ name: 'Register' }],
-                      }),
-                    );
-                  }}>
-                  <Text style={styles.logoutButtonText}>
-                    Keluar Dari Aplikasi
-                  </Text>
-                </TouchableHighlight>
-              </View>
             </View>
           </View>
         )
@@ -311,7 +283,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     zIndex: -999,
   },
-  notWorkerContainer: {
+  attendanceContainer: {
     height: '100%',
     justifyContent: 'center',
     paddingHorizontal: 22,
@@ -332,7 +304,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
     borderRadius: 10,
   },
-  findFarmButton: {
+  attendanceButton: {
     marginTop: 16,
     paddingVertical: 12,
     marginHorizontal: 12,
@@ -341,36 +313,7 @@ const styles = StyleSheet.create({
     borderColor: '#D69A38',
     borderRadius: 10,
   },
-  findFarmButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: 'white',
-  },
-  registerWorkerButton: {
-    marginTop: 8,
-    paddingVertical: 12,
-    marginHorizontal: 12,
-    borderRadius: 10,
-  },
-  registerWorkerButtonText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: 'white',
-  },
-  cek: {
-    position: 'absolute',
-    bottom: 32,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 34,
-  },
-  logoutButton: {
-    paddingVertical: 12,
-    borderRadius: 10,
-  },
-  logoutButtonText: {
+  attendanceButtonText: {
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
@@ -476,12 +419,17 @@ const styles = StyleSheet.create({
   },
   schedulePekerjaContainer: {
     flexDirection: 'row',
-    backgroundColor: 'white',
     marginTop: 8,
     padding: 16,
     borderWidth: 1.5,
     borderColor: '#EDEDED',
     borderRadius: 10,
+  },
+  backgroundColorWhite: {
+    backgroundColor: 'white',
+  },
+  backgroundColorGrey: {
+    backgroundColor: '#EAE9E9',
   },
   noTaskContainer: {
     backgroundColor: 'white',

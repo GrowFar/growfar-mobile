@@ -164,6 +164,19 @@ const FIND_FARM_WORKER_TASK_BY_ID = gql`
   }
 `;
 
+const FIND_FARM_WORKER_TASK_PROGRESS = gql`
+  query FindFarmWorkerTaskProgress($farmId: ID!, $userId: ID!) {
+    findFarmWorkerTaskProgress(farm_id: $farmId, user_id: $userId) {
+      id
+      title
+      description
+      started_at
+      ended_at
+      is_done
+    }
+  }
+`;
+
 export {
   FIND_USER_BY_PHONE,
   FIND_FARM_BY_USER_ID,
@@ -175,4 +188,5 @@ export {
   FIND_FARM_BY_WORKER_ID,
   FIND_FARM_WORKER_TASK_BY_FARM_ID,
   FIND_FARM_WORKER_TASK_BY_ID,
+  FIND_FARM_WORKER_TASK_PROGRESS,
 };
