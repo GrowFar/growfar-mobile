@@ -29,6 +29,7 @@ const FarmMapScreen = ({ navigation, route }) => {
   });
   const [dataPeternakan, setDataPeternakan] = useState([]);
   const [hargaSekitar, setHargaSekitar] = useState({});
+  const [rangeHarga, setRangeHarga] = useState({});
   const [modalVisible, setModalVisible] = useState(false);
   const { type } = route.params;
 
@@ -44,12 +45,17 @@ const FarmMapScreen = ({ navigation, route }) => {
     fetchPolicy: 'network-only',
     onCompleted(data) {
       const result = data.findFarmMarketNearby;
+      console.log(result);
       setDataPeternakan(result.data);
       setHargaSekitar({
         mingguIni: result.currentPrice,
         persentaseMingguIni: result.currentPercentage,
         mingguLalu: result.previousPrice,
         persentaseMingguLalu: result.previousPercentage,
+      });
+      setRangeHarga({
+        lowPrice: result.predictionLowPrice,
+        highPrice: result.predictionHighPrice,
       });
     },
     onError(data) {
@@ -152,8 +158,8 @@ const FarmMapScreen = ({ navigation, route }) => {
       <View style={styles.contentContainer}>
         <View style={styles.pakanContainer}>
           <Text style={styles.namaPakan}>Harga Pakan Jagung</Text>
-          <ArrowUpIcon />
-          <Text style={{ ...styles.persentasePakan, ...styles.colorGreen }}>
+          <ArrowDownIcon />
+          <Text style={{ ...styles.persentasePakan, ...styles.colorRed }}>
             5%
           </Text>
           <Text>Rp 5.790,- /kg</Text>
@@ -224,9 +230,13 @@ const FarmMapScreen = ({ navigation, route }) => {
                 Harga yang direkomendasikan
               </Text>
               <View style={styles.rekomendasiContainer}>
-                <Text style={styles.rekomendasiHarga}>Rp 18.600,-</Text>
+                <Text style={styles.rekomendasiHarga}>
+                  Rp {rangeHarga.lowPrice.toFixed()},-
+                </Text>
                 <Text>sd</Text>
-                <Text style={styles.rekomendasiHarga}>Rp 19.600,-</Text>
+                <Text style={styles.rekomendasiHarga}>
+                  Rp {rangeHarga.highPrice.toFixed()},-
+                </Text>
               </View>
               <TextInput
                 style={styles.inputPrice}

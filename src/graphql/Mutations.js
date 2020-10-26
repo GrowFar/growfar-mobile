@@ -144,6 +144,32 @@ const CREATE_FARM_WORKER_PERMIT = gql`
   }
 `;
 
+const CREATE_FARM_WORKER_PERMIT_SUBMIT = gql`
+  mutation CreateFarmWorkerPermitSubmit(
+    $workerPermitId: ID!
+    $isAllowed: Boolean!
+    $farmId: ID!
+  ) {
+    createFarmWorkerPermitSubmit(
+      worker_permit_id: $workerPermitId
+      is_allowed: $isAllowed
+      farm_id: $farmId
+    ) {
+      id
+    }
+  }
+`;
+
+const CREATE_FARM_WORKER_ATTENDANCE = gql`
+  mutation CreateFarmWorkerAttendance($farmId: ID!, $userId: ID!) {
+    createFarmWorkerAttendance(farm_id: $farmId, user_id: $userId) {
+      user_id
+      farm_id
+      inside_farm
+    }
+  }
+`;
+
 export {
   CREATE_NEW_USER,
   CREATE_NEW_FARM,
@@ -155,4 +181,6 @@ export {
   DELETE_FARM_WORKER_TASK_BY_ID,
   CREATE_FARM_WORKER_TASK_ON_DONE,
   CREATE_FARM_WORKER_PERMIT,
+  CREATE_FARM_WORKER_PERMIT_SUBMIT,
+  CREATE_FARM_WORKER_ATTENDANCE,
 };

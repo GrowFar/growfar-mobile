@@ -27,9 +27,10 @@ const AddWorkerScreen = () => {
 
   useEffect(() => {
     if (user) {
+      console.log(user);
       generateCode({
         variables: {
-          farmId: user.id,
+          farmId: user.farm.id,
         },
       });
     }
@@ -52,6 +53,7 @@ const AddWorkerScreen = () => {
   const [generateCode] = useMutation(GENERATE_FARM_INVITATION_CODE, {
     async onCompleted(data) {
       const result = data.generateFarmInvitationCode.generated_token;
+      console.log(result);
       await mergeUserData({
         farm: {
           invitationCode: result,

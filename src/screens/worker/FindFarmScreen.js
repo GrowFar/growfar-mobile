@@ -33,10 +33,15 @@ const FindFarmScreen = ({ navigation }) => {
   const [listFarm, setListFarm] = useState([]);
   const [farmInfo, setFarmInfo] = useState();
   const [modalVisible, setModalVisible] = useState(false);
+  const [lowongan, setLowongan] = useState(0);
 
   useEffect(() => {
     getCurrentPosition();
   }, []);
+
+  const randomNumber = () => {
+    return Math.floor(Math.random() * 20) + 1;
+  };
 
   const requestPermissionsOnMapReady = () => {
     Platform.OS === 'android'
@@ -173,6 +178,7 @@ const FindFarmScreen = ({ navigation }) => {
                     phone: item.phone,
                   });
                   setModalVisible(true);
+                  setLowongan(randomNumber());
                 }}
               />
             ))}
@@ -217,7 +223,7 @@ const FindFarmScreen = ({ navigation }) => {
                     <Text style={styles.bold}>{farmInfo.commodity}</Text>. Saat
                     ini sedang mencari pekerja.{' '}
                     <Text style={styles.bold}>
-                      Tersedia {farmInfo.vacancy} lowongan.
+                      Tersedia {lowongan} lowongan.
                     </Text>
                   </Text>
                   <TouchableHighlight

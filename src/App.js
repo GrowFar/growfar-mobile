@@ -19,6 +19,8 @@ import AddWorkerScreen from './screens/farmer/AddWorkerScreen';
 import AddWorkerTaskScreen from './screens/farmer/AddWorkerTaskScreen';
 import EditWorkerTaskScreen from './screens/farmer/EditWorkerTaskScreen';
 import NotificationListScreen from './screens/farmer/NotificationListScreen';
+import PermitDetailScreen from './screens/farmer/PermitDetailScreen';
+import WorkerListScreen from './screens/farmer/WorkerListScreen';
 import OnBoardingWorkerScreen from './screens/worker/OnBoardingWorkerScreen';
 import HomeWorkerScreen from './screens/worker/HomeWorkerScreen';
 import FindFarmScreen from './screens/worker/FindFarmScreen';
@@ -73,17 +75,10 @@ const App = () => {
             <Stack.Screen
               name="Home"
               options={{
-                title: 'Profile',
+                title: null,
                 headerBackTitle: 'Kembali',
                 headerShown: true,
-                headerStyle: {
-                  backgroundColor: '#FAFAFA',
-                  borderBottomWidth: 0,
-                  elevation: 0,
-                },
-                headerTitleStyle: {
-                  fontSize: 18,
-                },
+                headerTransparent: true,
               }}
               component={HomeScreen}
             />
@@ -231,6 +226,40 @@ const App = () => {
                 },
               }}
               component={NotificationListScreen}
+            />
+            <Stack.Screen
+              name="WorkerList"
+              options={{
+                title: 'Lihat Pekerja',
+                headerBackTitle: 'Kembali',
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#FAFAFA',
+                  borderBottomWidth: 0,
+                  elevation: 0,
+                },
+                headerTitleStyle: {
+                  fontSize: 18,
+                },
+              }}
+              component={WorkerListScreen}
+            />
+            <Stack.Screen
+              name="PermitDetail"
+              options={{
+                title: 'Lihat Izin Ketidakhadiran',
+                headerBackTitle: 'Kembali',
+                headerShown: true,
+                headerStyle: {
+                  backgroundColor: '#FAFAFA',
+                  borderBottomWidth: 0,
+                  elevation: 0,
+                },
+                headerTitleStyle: {
+                  fontSize: 18,
+                },
+              }}
+              component={PermitDetailScreen}
             />
             {/* Worker */}
             <Stack.Screen

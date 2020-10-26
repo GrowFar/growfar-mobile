@@ -149,7 +149,7 @@ const ManageWorkerScreen = ({ navigation }) => {
             style={styles.manageButton}
             activeOpacity={0.3}
             underlayColor="#FAFAFA"
-            onPress={() => navigation.navigate('Komoditas Tersedia')}>
+            onPress={() => navigation.navigate('WorkerList')}>
             <Text style={styles.manageButtonText}>Lihat Pekerja</Text>
           </TouchableHighlight>
           <View style={styles.scheduleContainer}>
