@@ -86,6 +86,8 @@ const FIND_FARM_MARKET_NEARBY = gql`
       currentPercentage
       previousPrice
       previousPercentage
+      predictionLowPrice
+      predictionHighPrice
       data {
         farm {
           id
@@ -187,6 +189,68 @@ const FIND_LOG_ACTIVITY = gql`
   }
 `;
 
+const FIND_FARM_WORKER = gql`
+  query FindFarmWorker($farmId: ID!, $limit: Int!, $page: Int!) {
+    findFarmWorker(farm_id: $farmId, limit: $limit, page: $page) {
+      farm_id
+      users {
+        id
+        uid
+        fullname
+        phone
+        role
+        permit_id
+      }
+    }
+  }
+`;
+
+const FIND_FARM_WORKER_PERMIT_BY_ID = gql`
+  query FindFarmWorkerPermitById($workerPermitId: ID!) {
+    findFarmWorkerPermitById(worker_permit_id: $workerPermitId) {
+      id
+      category
+      description
+      duration
+      is_allowed
+      submit_at
+      worker {
+        id
+        uid
+        fullname
+        phone
+        role
+      }
+    }
+  }
+`;
+
+const FIND_WORKER_IS_ALREADY_ATTENDANCE = gql`
+  query FindWorkerIsAlreadyAttendance($farmId: ID!, $userId: ID!) {
+    findWorkerIsAlreadyAttendance(farm_id: $farmId, user_id: $userId) {
+      attendance
+    }
+  }
+`;
+
+const FIND_WORKER_IS_ON_WORK_LOCATION = gql`
+  query FindWorkerIsOnWorkLocation(
+    $farmId: ID!
+    $userId: ID!
+    $longitude: Float!
+    $latitude: Float!
+  ) {
+    findWorkerIsOnWorkLocation(
+      farm_id: $farmId
+      user_id: $userId
+      longitude: $longitude
+      latitude: $latitude
+    ) {
+      inside_farm
+    }
+  }
+`;
+
 export {
   FIND_USER_BY_PHONE,
   FIND_FARM_BY_USER_ID,
@@ -200,4 +264,8 @@ export {
   FIND_FARM_WORKER_TASK_BY_ID,
   FIND_FARM_WORKER_TASK_PROGRESS,
   FIND_LOG_ACTIVITY,
+  FIND_FARM_WORKER,
+  FIND_FARM_WORKER_PERMIT_BY_ID,
+  FIND_WORKER_IS_ALREADY_ATTENDANCE,
+  FIND_WORKER_IS_ON_WORK_LOCATION,
 };

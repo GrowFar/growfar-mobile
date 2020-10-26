@@ -4,16 +4,23 @@ import {
   ScrollView,
   View,
   Text,
+  TextInput,
+  Platform,
   TouchableHighlight,
   TouchableWithoutFeedback,
   ActivityIndicator,
   Modal,
   StyleSheet,
+  Linking,
 } from 'react-native';
 import moment from 'moment';
 import AsyncStorage from '@react-native-community/async-storage';
+import Geolocation from '@react-native-community/geolocation';
 import { useLazyQuery, useMutation } from '@apollo/client';
-import { FIND_FARM_WORKER_TASK_BY_ID } from '../../graphql/Queries';
+import {
+  FIND_FARM_WORKER_TASK_BY_ID,
+  FIND_WORKER_IS_ON_WORK_LOCATION,
+} from '../../graphql/Queries';
 import { CREATE_FARM_WORKER_TASK_ON_DONE } from '../../graphql/Mutations';
 import Spinner from '../../components/Spinner';
 import ClockIcon from '../../assets/ClockIcon.svg';
@@ -27,6 +34,8 @@ const TaskDetailScreen = ({ route, navigation, navigation: { goBack } }) => {
   const [user, setUser] = useState();
   const [taskDetail, setTaskDetail] = useState();
   const [modalVisible, setModalVisible] = useState(false);
+  const [insideFarm, setInsideFarm] = useState(false);
+  const [deskripsi, setDeskripsi] = useState();
 
   useEffect(() => {
     readUserDataFromStorage();
@@ -34,6 +43,7 @@ const TaskDetailScreen = ({ route, navigation, navigation: { goBack } }) => {
 
   useEffect(() => {
     if (user) {
+      onCheckLocation();
       getTaskDetail({
         variables: {
           taskId: taskId,
@@ -76,6 +86,18 @@ const TaskDetailScreen = ({ route, navigation, navigation: { goBack } }) => {
     return moment(moment(time, 'HH:mm:ss').toDate()).format('HH:mm');
   };
 
+  const [checkLocation] = useLazyQuery(FIND_WORKER_IS_ON_WORK_LOCATION, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    onCompleted(data) {
+      const result = data.findWorkerIsOnWorkLocation.inside_farm;
+      setInsideFarm(result);
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
   const [getTaskDetail] = useLazyQuery(FIND_FARM_WORKER_TASK_BY_ID, {
     errorPolicy: 'ignore',
     fetchPolicy: 'network-only',
@@ -101,6 +123,25 @@ const TaskDetailScreen = ({ route, navigation, navigation: { goBack } }) => {
       console.log(data);
     },
   });
+
+  const onCheckLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        checkLocation({
+          variables: {
+            farmId: user.farm.id,
+            userId: user.id,
+            longitude: position.coords.longitude,
+            latitude: position.coords.latitude,
+          },
+        });
+      },
+      (error) => {
+        console.log(error);
+      },
+      { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 },
+    );
+  };
 
   const onFinishTask = () => {
     setModalVisible(false);
@@ -144,11 +185,55 @@ const TaskDetailScreen = ({ route, navigation, navigation: { goBack } }) => {
                 </View>
               </View>
               <TouchableHighlight
-                style={styles.finishTaskButton}
+                disabled={!insideFarm}
+                style={
+                  insideFarm
+                    ? styles.finishTaskButton
+                    : styles.finishTaskDisabledButton
+                }
                 underlayColor="#FFBA49CC"
                 onPress={() => setModalVisible(true)}>
-                <Text style={styles.finishTaskButtonText}>
+                <Text
+                  style={
+                    insideFarm
+                      ? styles.finishTaskButtonText
+                      : styles.finishTaskDisabledButtonText
+                  }>
                   Selesai Dikerjakan
+                </Text>
+              </TouchableHighlight>
+              <Text style={styles.subText}>Butuh Penjelasan</Text>
+              <Text>
+                Berikan salam, dan tinggalkan pertanyaan untuk Pak Ngatemo.
+                Sehingga nanti dapat dijawab
+              </Text>
+              <TextInput
+                style={styles.textArea}
+                autoCorrect={false}
+                multiline={true}
+                numberOfLines={5}
+                minHeight={Platform.OS === 'ios' ? 20 * 5 : null}
+                maxLength={300}
+                placeholder="Deskripsi"
+                textAlignVertical="top"
+                onChangeText={(text) => setDeskripsi(text)}
+              />
+              <Text style={styles.textAreaLength}>
+                {deskripsi ? deskripsi.length : '0'}/300
+              </Text>
+              <TouchableHighlight
+                style={styles.izinButton}
+                underlayColor="#FFBA49CC"
+                onPress={() => console.log('cek')}>
+                <Text style={styles.izinButtonText}>Kirim Pesan</Text>
+              </TouchableHighlight>
+              <TouchableHighlight
+                style={styles.contactButton}
+                activeOpacity={0.3}
+                underlayColor="#FAFAFA"
+                onPress={() => Linking.openURL(`tel:${user.farm.user.phone}`)}>
+                <Text style={styles.contactButtonText}>
+                  Atau Hubungi Langsung
                 </Text>
               </TouchableHighlight>
               <Modal
@@ -285,6 +370,20 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: 'white',
   },
+  finishTaskDisabledButton: {
+    marginTop: 8,
+    paddingVertical: 12,
+    backgroundColor: '#EAE9E9',
+    borderWidth: 1.5,
+    borderColor: '#B5B5B5',
+    borderRadius: 10,
+  },
+  finishTaskDisabledButtonText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#B5B5B5',
+  },
   bottomView: {
     flex: 1,
     justifyContent: 'flex-end',
@@ -335,6 +434,53 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: '#FFBA49',
+  },
+  textArea: {
+    width: '100%',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    marginTop: 24,
+    borderWidth: 1,
+    borderColor: '#B6B6B6',
+    borderRadius: 8,
+    textAlignVertical: 'top',
+  },
+  textAreaLength: {
+    marginTop: 4,
+    textAlign: 'right',
+    fontSize: 12,
+  },
+  izinButton: {
+    marginTop: 18,
+    paddingVertical: 12,
+    backgroundColor: '#FFBA49',
+    borderWidth: 1.5,
+    borderColor: '#D69A38',
+    borderRadius: 10,
+  },
+  izinButtonText: {
+    fontSize: 15,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: 'white',
+  },
+  contactButton: {
+    marginTop: 12,
+    paddingVertical: 12,
+    borderRadius: 10,
+  },
+  contactButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#FFBA49',
+  },
+  subText: {
+    marginTop: 32,
+    marginBottom: 4,
+    color: '#2E4057',
+    fontWeight: 'bold',
+    fontSize: 20,
   },
 });
 

@@ -10,15 +10,20 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
+  RefreshControl,
   ActivityIndicator,
 } from 'react-native';
 import moment from 'moment';
 import AsyncStorage from '@react-native-community/async-storage';
-import { useLazyQuery } from '@apollo/client';
+import Geolocation from '@react-native-community/geolocation';
+import { useLazyQuery, useMutation } from '@apollo/client';
 import {
   FIND_FARM_BY_WORKER_ID,
   FIND_FARM_WORKER_TASK_PROGRESS,
+  FIND_WORKER_IS_ALREADY_ATTENDANCE,
+  FIND_WORKER_IS_ON_WORK_LOCATION,
 } from '../../graphql/Queries';
+import { CREATE_FARM_WORKER_ATTENDANCE } from '../../graphql/Mutations';
 import HomeFarmBanner from '../../assets/HomeFarmBanner.svg';
 import HomeWorkerBackground from '../../assets/HomeWorkerBackground.svg';
 import ClockIcon from '../../assets/ClockIcon.svg';
@@ -31,6 +36,8 @@ const HomeWorkerScreen = ({ navigation }) => {
   const [heightScreen, setHeightScreen] = useState(0);
   const [isAttend, setIsAttend] = useState(null);
   const [taskList, setTaskList] = useState();
+  const [refreshing, setRefreshing] = useState(false);
+  const [insideFarm, setInsideFarm] = useState(false);
 
   useEffect(() => {
     readUserDataFromStorage();
@@ -48,6 +55,13 @@ const HomeWorkerScreen = ({ navigation }) => {
   useEffect(() => {
     if (user) {
       if (user.farm) {
+        onCheckLocation();
+        checkAttendance({
+          variables: {
+            farmId: user.farm.id,
+            userId: user.id,
+          },
+        });
         setTaskList(null);
         getWorkerTask({
           variables: {
@@ -122,6 +136,7 @@ const HomeWorkerScreen = ({ navigation }) => {
     fetchPolicy: 'network-only',
     onCompleted(data) {
       const result = data.findFarmWorkerTaskProgress;
+      console.log(result);
       setTaskList(result);
     },
     onError(data) {
@@ -129,14 +144,123 @@ const HomeWorkerScreen = ({ navigation }) => {
     },
   });
 
+  const [checkAttendance] = useLazyQuery(FIND_WORKER_IS_ALREADY_ATTENDANCE, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    onCompleted(data) {
+      const result = data.findWorkerIsAlreadyAttendance;
+      if (result.attendance) {
+        setIsAttend(true);
+      } else {
+        setIsAttend(false);
+      }
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
+  const [checkLocation] = useLazyQuery(FIND_WORKER_IS_ON_WORK_LOCATION, {
+    errorPolicy: 'ignore',
+    fetchPolicy: 'network-only',
+    onCompleted(data) {
+      const result = data.findWorkerIsOnWorkLocation.inside_farm;
+      setInsideFarm(result);
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
+  const [submitAttendance] = useMutation(CREATE_FARM_WORKER_ATTENDANCE, {
+    onCompleted(data) {
+      console.log(data);
+      setIsAttend(true);
+    },
+    onError(data) {
+      console.log(data);
+    },
+  });
+
+  const onCheckLocation = () => {
+    Geolocation.getCurrentPosition(
+      (position) => {
+        checkLocation({
+          variables: {
+            farmId: user.farm.id,
+            userId: user.id,
+            longitude: position.coords.longitude,
+            latitude: position.coords.latitude,
+          },
+        });
+      },
+      (error) => {
+        console.log(error);
+      },
+      { enableHighAccuracy: false, timeout: 200000, maximumAge: 1000 },
+    );
+  };
+
   const onRecordAttendance = () => {
-    console.log('Record');
+    submitAttendance({
+      variables: {
+        farmId: user.farm.id,
+        userId: user.id,
+      },
+    });
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    getWorkerTask({
+      variables: {
+        farmId: user.farm.id,
+        userId: user.id,
+      },
+    });
+    setRefreshing(false);
   };
 
   return (
     <SafeAreaView style={styles.contentContainer}>
       {isAttend !== null ? (
-        isAttend === true ? (
+        isAttend === false ? (
+          <View>
+            <StatusBar backgroundColor="#267D77" />
+            <View style={styles.containerBackground}>
+              <HomeWorkerBackground height={heightScreen} />
+            </View>
+            <View style={styles.attendanceContainer}>
+              <Text style={styles.sectionText}>
+                Lakukan Absensi Terlebih Dahulu
+              </Text>
+              <Text style={styles.descriptionText}>
+                Jangan lupa nyalakan GPS atau layanan lokasi. Sehingga anda
+                dapat melakukan pencatatan kehadiran maupun tracking pekerjaan.
+              </Text>
+              <TouchableHighlight
+                disabled={!insideFarm}
+                style={
+                  insideFarm
+                    ? styles.attendanceButton
+                    : styles.attendanceDisabledButton
+                }
+                underlayColor="#FFBA49CC"
+                onPress={() => onRecordAttendance()}>
+                <Text
+                  style={
+                    insideFarm
+                      ? styles.attendanceButtonText
+                      : styles.attendanceDisabledButtonText
+                  }>
+                  {insideFarm
+                    ? 'Catat Kehadiran'
+                    : 'Anda Tidak Berada Di Peternakan'}
+                </Text>
+              </TouchableHighlight>
+            </View>
+          </View>
+        ) : (
           <View style={styles.workerContainer}>
             <StatusBar backgroundColor="#C8C8C8" />
             <View style={styles.profileContainer}>
@@ -155,7 +279,10 @@ const HomeWorkerScreen = ({ navigation }) => {
             <ScrollView
               style={styles.scrollContainer}
               showsHorizontalScrollIndicator={false}
-              showsVerticalScrollIndicator={false}>
+              showsVerticalScrollIndicator={false}
+              refreshControl={
+                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              }>
               <View style={styles.infoCard}>
                 <View style={styles.containerBanner}>
                   <HomeFarmBanner style={styles.homeFarmBanner} />
@@ -163,8 +290,8 @@ const HomeWorkerScreen = ({ navigation }) => {
                 <View style={styles.textContainer}>
                   <Text style={styles.textHeader}>Jangan Lupa</Text>
                   <Text style={styles.textDescription}>
-                    Hari ini anda memiliki jadwal bekerja di peternakan miliki
-                    Pak Ngatemo dimulai pukul 05.00 AM
+                    Hari ini anda memiliki jadwal bekerja di peternakan milik
+                    Pak {user.farm.user.fullname} dimulai pukul 06.00 AM
                   </Text>
                   <Text style={styles.textTask}>
                     {taskList ? taskList.length : '0'} Tugas
@@ -246,28 +373,6 @@ const HomeWorkerScreen = ({ navigation }) => {
               </View>
             </ScrollView>
           </View>
-        ) : (
-          <View>
-            <StatusBar backgroundColor="#267D77" />
-            <View style={styles.containerBackground}>
-              <HomeWorkerBackground height={heightScreen} />
-            </View>
-            <View style={styles.attendanceContainer}>
-              <Text style={styles.sectionText}>
-                Lakukan Absensi Terlebih Dahulu
-              </Text>
-              <Text style={styles.descriptionText}>
-                Jangan lupa nyalakan GPS atau layanan lokasi. Sehingga anda
-                dapat melakukan pencatatan kehadiran maupun tracking pekerjaan.
-              </Text>
-              <TouchableHighlight
-                style={styles.attendanceButton}
-                underlayColor="#FFBA49CC"
-                onPress={() => onRecordAttendance()}>
-                <Text style={styles.attendanceButtonText}>Catat Kehadiran</Text>
-              </TouchableHighlight>
-            </View>
-          </View>
         )
       ) : null}
     </SafeAreaView>
@@ -318,6 +423,21 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     textAlign: 'center',
     color: 'white',
+  },
+  attendanceDisabledButton: {
+    marginTop: 16,
+    paddingVertical: 12,
+    marginHorizontal: 12,
+    backgroundColor: '#EAE9E9',
+    borderWidth: 1.5,
+    borderColor: '#B5B5B5',
+    borderRadius: 10,
+  },
+  attendanceDisabledButtonText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    color: '#B5B5B5',
   },
   workerContainer: {
     height: '100%',

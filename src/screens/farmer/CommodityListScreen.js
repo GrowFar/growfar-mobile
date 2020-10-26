@@ -34,9 +34,15 @@ const CommodityListScreen = ({ navigation }) => {
       <View style={styles.categoryContainer}>
         <Image
           style={styles.categoryImage}
-          source={{
-            uri: 'https://api.adorable.io/avatars/0',
-          }}
+          source={
+            result.title === 'Telur'
+              ? require('../../assets/Komoditas_Telur.png')
+              : result.title === 'Susu'
+              ? require('../../assets/Komoditas_Susu.jpg')
+              : {
+                  uri: `https://api.adorable.io/avatars/${result.title}`,
+                }
+          }
         />
         <View style={styles.categoryTextContainer}>
           <Text style={styles.categoryTextName}>Kelompok {result.title}</Text>
@@ -52,9 +58,15 @@ const CommodityListScreen = ({ navigation }) => {
             <View style={styles.commodityContainer}>
               <Image
                 style={styles.commodityImage}
-                source={{
-                  uri: `https://api.adorable.io/avatars/${item.id}`,
-                }}
+                source={
+                  result.title === 'Telur'
+                    ? require('../../assets/Komoditas_Telur.png')
+                    : result.title === 'Susu'
+                    ? require('../../assets/Komoditas_Susu.jpg')
+                    : {
+                        uri: `https://api.adorable.io/avatars/${result.title}`,
+                      }
+                }
               />
               <View style={styles.categoryTextContainer}>
                 <Text style={styles.categoryTextName}>{item.name}</Text>

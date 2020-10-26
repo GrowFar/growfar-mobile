@@ -9,6 +9,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import moment from 'moment';
+var idLocale = require('moment/locale/id');
+moment.locale('id', idLocale);
 import AsyncStorage from '@react-native-community/async-storage';
 import { useLazyQuery } from '@apollo/client';
 import { FIND_LOG_ACTIVITY } from '../../graphql/Queries';
@@ -21,6 +23,8 @@ const NotificationListScreen = () => {
   const [user, setUser] = useState();
   const [notifList, setNotifList] = useState([]);
   const [page, setPage] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     readUserDataFromStorage();
@@ -31,7 +35,7 @@ const NotificationListScreen = () => {
       getLogActivity({
         variables: {
           userId: user.id,
-          limit: 10,
+          limit: 6,
           page: page + 1,
         },
       });
@@ -45,15 +49,18 @@ const NotificationListScreen = () => {
   };
 
   const convertTime = (time) => {
-    return moment(moment(time, 'HH:mm:ss').toDate()).format('HH:mm');
+    return moment(time).format('lll');
   };
 
   const [getLogActivity] = useLazyQuery(FIND_LOG_ACTIVITY, {
     errorPolicy: 'ignore',
     fetchPolicy: 'no-cache',
-    onCompleted(data) {
+    async onCompleted(data) {
       const result = data.findLogActivity;
       setNotifList(notifList.concat(result));
+      if (result.length === 0) {
+        setLoadingMore(false);
+      }
     },
     onError(data) {
       console.log(data);
@@ -65,12 +72,30 @@ const NotificationListScreen = () => {
       getLogActivity({
         variables: {
           userId: user.id,
-          limit: 10,
+          limit: 6,
           page: page + 1,
         },
       });
+    } else {
+      setLoadingMore(true);
+      setNotifList([]);
+      if (user) {
+        getLogActivity({
+          variables: {
+            userId: user.id,
+            limit: 6,
+            page: page + 1,
+          },
+        });
+      }
     }
   }, [page]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setPage(0);
+    setRefreshing(false);
+  };
 
   const renderCategory = (category) => {
     let item;
@@ -106,62 +131,72 @@ const NotificationListScreen = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.contentContainer}>
-        {notifList.length > 0 ? (
-          <FlatList
-            data={notifList}
-            showsHorizontalScrollIndicator={false}
-            showsVerticalScrollIndicator={false}
-            ListHeaderComponent={
-              <Text style={styles.textSub}>Log Aktivitas</Text>
-            }
-            ListFooterComponent={
-              <View style={styles.noLogContainer}>
-                <ActivityIndicator size="large" color="#2F9C95" />
-              </View>
-            }
-            onEndReachedThreshold={0.01}
-            onEndReached={() => setPage(page + 1)}
-            keyExtractor={(item, index) =>
-              'informasi_' + item.information.data + '_index_' + index
-            }
-            renderItem={({ item, index }) => (
-              <View key={index} style={styles.logPekerjaContainer}>
-                <View style={styles.profileContainerPekerja}>
-                  <Image
-                    style={styles.profileImagePekerja}
-                    source={{
-                      uri: `https://api.adorable.io/avatars/${
-                        item.information.user_id
-                          ? item.information.user_id
-                          : '1'
-                      }`,
-                    }}
-                  />
-                  <View style={styles.textDescriptionPekerja}>
-                    <Text style={styles.namaPekerja}>
-                      {item.information.title}
-                    </Text>
-                    <View style={styles.timePekerjaContainer}>
-                      <ClockIcon />
-                      <Text style={styles.timePekerja}>
-                        Selesai pada{' '}
-                        {convertTime(item.information.task_finish_at)}
-                      </Text>
-                    </View>
-                  </View>
-                  {renderCategory(item.notification_type)}
+        <FlatList
+          data={notifList}
+          showsHorizontalScrollIndicator={false}
+          showsVerticalScrollIndicator={false}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          ListHeaderComponent={
+            <Text style={styles.textSub}>Log Aktivitas</Text>
+          }
+          ListFooterComponent={
+            notifList.length > 0 ? (
+              loadingMore ? (
+                <View style={styles.noLogContainer}>
+                  <ActivityIndicator size="large" color="#2F9C95" />
                 </View>
-                <Text style={styles.logText}>{item.information.data}</Text>
+              ) : null
+            ) : (
+              <View style={styles.noLogContainer}>
+                <Text style={styles.noLogText}>
+                  Kamu belum memiliki pemberitahuan
+                </Text>
               </View>
-            )}
-          />
-        ) : (
-          <View style={styles.noLogContainer}>
-            <Text style={styles.noLogText}>
-              Kamu belum memiliki pemberitahuan
-            </Text>
-          </View>
-        )}
+            )
+          }
+          onEndReachedThreshold={0.01}
+          onEndReached={() => {
+            if (loadingMore) {
+              setPage(page + 1);
+            }
+          }}
+          keyExtractor={(item, index) =>
+            'informasi_' + item.information.data + '_index_' + index
+          }
+          renderItem={({ item, index }) => (
+            <View key={index} style={styles.logPekerjaContainer}>
+              <View style={styles.profileContainerPekerja}>
+                <Image
+                  style={styles.profileImagePekerja}
+                  source={{
+                    uri: `https://api.adorable.io/avatars/${
+                      item.information.user_id ? item.information.user_id : '1'
+                    }`,
+                  }}
+                />
+                <View style={styles.textDescriptionPekerja}>
+                  <Text style={styles.namaPekerja}>
+                    {item.information.title}
+                  </Text>
+                  <View style={styles.timePekerjaContainer}>
+                    <ClockIcon />
+                    <Text style={styles.timePekerja}>
+                      {item.notification_type === 'ABSENT'
+                        ? 'Mengajukan pada'
+                        : 'Selesai pada'}{' '}
+                      {item.notification_type === 'TASK'
+                        ? convertTime(item.information.task_finish_at)
+                        : convertTime(item.information.submit_at)}
+                    </Text>
+                  </View>
+                </View>
+                {renderCategory(item.notification_type)}
+              </View>
+              <Text style={styles.logText}>{item.information.data}</Text>
+            </View>
+          )}
+        />
       </View>
     </SafeAreaView>
   );

@@ -24,6 +24,7 @@
     "graphql": "~15.3.0",
     "json-groupby": "~1.1.0",
     "moment": "~2.29.1",
+    "moment-timezone": "~0.5.31",
     "react": "16.13.1",
     "react-native": "0.63.2",
     "react-native-camera": "~3.40.0",

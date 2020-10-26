@@ -80,7 +80,18 @@ const CommodityScreen = ({ navigation }) => {
             sesuai
           </Text>
           <View style={styles.categoryContainer}>
-            <Image style={styles.categoryImage} />
+            <Image
+              style={styles.categoryImage}
+              source={
+                commodity.commodityName
+                  ? commodity.commodityName.includes('Telur')
+                    ? require('../../assets/Komoditas_Telur.png')
+                    : commodity.commodityName.includes('Susu')
+                    ? require('../../assets/Komoditas_Susu.jpg')
+                    : null
+                  : null
+              }
+            />
             <View style={styles.categoryTextContainer}>
               <Text style={styles.categoryTextName}>
                 Harga yang anda tentukan

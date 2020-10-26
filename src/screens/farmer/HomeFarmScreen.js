@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   SafeAreaView,
-  ScrollView,
   Text,
   View,
   TouchableOpacity,
@@ -9,6 +8,7 @@ import {
   FlatList,
   StyleSheet,
   Image,
+  StatusBar,
   ActivityIndicator,
 } from 'react-native';
 import moment from 'moment';
@@ -33,6 +33,8 @@ const HomeScreen = ({ navigation }) => {
   const [avatar, setAvatar] = useState();
   const [logList, setLogList] = useState([]);
   const [page, setPage] = useState(null);
+  const [loadingMore, setLoadingMore] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const readUserDataFromStorage = async () => {
     let item = await AsyncStorage.getItem('user');
@@ -50,7 +52,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const convertTime = (time) => {
-    return moment(moment(time, 'HH:mm:ss').toDate()).format('HH:mm');
+    return moment(time).format('lll');
   };
 
   // Cari komoditas berdasarkan id peternakan
@@ -99,6 +101,9 @@ const HomeScreen = ({ navigation }) => {
         (item) => item.notification_type === 'TASK',
       );
       setLogList(logList.concat(filteredResult));
+      if (result.length === 0) {
+        setLoadingMore(false);
+      }
     },
     onError(data) {
       console.log(data);
@@ -112,7 +117,6 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       setLogList([]);
-      setPage(0);
       readUserDataFromStorage();
     });
     return unsubscribe;
@@ -121,7 +125,6 @@ const HomeScreen = ({ navigation }) => {
   // Ambil komoditas jika user sudah di set
   useEffect(() => {
     if (user) {
-      console.log('nilai page ' + page);
       getLogActivity({
         variables: {
           userId: user.id,
@@ -154,8 +157,26 @@ const HomeScreen = ({ navigation }) => {
           page: page + 1,
         },
       });
+    } else {
+      setLoadingMore(true);
+      setLogList([]);
+      if (user) {
+        getLogActivity({
+          variables: {
+            userId: user.id,
+            limit: 5,
+            page: page + 1,
+          },
+        });
+      }
     }
   }, [page]);
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    setPage(0);
+    setRefreshing(false);
+  };
 
   const getHeader = () => {
     return (
@@ -238,12 +259,13 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.homeFarmContainer}>
+      <StatusBar backgroundColor="#C8C8C8" />
       <View style={styles.contentContainer}>
         <View style={styles.profileContainer}>
           <TouchableOpacity
             style={styles.profileButton}
             onPress={() => navigation.navigate('Home')}>
-            <Text style={styles.profileText}>Profile</Text>
+            <Text style={styles.profileText}>Informasi Peternakanmu</Text>
             <Image
               style={styles.profileImage}
               source={{
@@ -256,14 +278,31 @@ const HomeScreen = ({ navigation }) => {
           data={logList}
           showsHorizontalScrollIndicator={false}
           showsVerticalScrollIndicator={false}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
           ListHeaderComponent={getHeader}
           ListFooterComponent={
-            <View style={styles.noLogContainer}>
-              <ActivityIndicator size="large" color="#2F9C95" />
-            </View>
+            logList.length > 0 ? (
+              loadingMore ? (
+                <View style={styles.noLogContainer}>
+                  <ActivityIndicator size="large" color="#2F9C95" />
+                </View>
+              ) : null
+            ) : (
+              <View style={styles.noLogContainer}>
+                <Text style={styles.noLogText}>
+                  Belum ada pembaharuan tugas oleh pekerjamu. Hubungi atau
+                  periksa lebih lanjut!
+                </Text>
+              </View>
+            )
           }
           onEndReachedThreshold={0.01}
-          onEndReached={() => setPage(page + 1)}
+          onEndReached={() => {
+            if (loadingMore) {
+              setPage(page + 1);
+            }
+          }}
           keyExtractor={(item, index) =>
             'informasi_' + item.information.data + '_index_' + index
           }
@@ -408,10 +447,11 @@ const styles = StyleSheet.create({
   manageContainer: {
     display: 'flex',
     flexDirection: 'row',
+    justifyContent: 'space-between',
     marginTop: 12,
   },
   manageButton: {
-    marginRight: 12,
+    width: '48%',
     borderRadius: 12,
   },
   manageButtonContainer: {
